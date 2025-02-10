@@ -1,11 +1,12 @@
 package main
 
 import (
+	"chat_app_server/config"
+	database "chat_app_server/database/postgres"
 	"chat_app_server/graph"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -18,12 +19,9 @@ import (
 const defaultPort = "8080"
 
 func main() {
-	fmt.Println("Hello, World!")
+	secret := config.GetSecrets()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
+	database.ConnectDB(secret.Host, secret.Db_User, secret.Password, secret.DbName, secret.Port)
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
 
@@ -41,6 +39,6 @@ func main() {
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", defaultPort)
+	log.Fatal(http.ListenAndServe(":"+defaultPort, nil))
 }
