@@ -1,17 +1,22 @@
 input AuthUserCreate {
-  FirstName: String!
-  LastName: String!
-  Email: String!
-  Password: String!
+  username: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
 }
 
 type AuthUserResponse {
-  Id: String
-  FirstName: String!
-  LastName: String!
-  Email: String!
-  TimeCreated: String!
-  TimeUpdated: String!
+  id: Int!
+  firstName: String!
+  lastName: String!
+  email: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Query {
+  placeholder: String
 }
 
 type Mutation {

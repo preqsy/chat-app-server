@@ -3,19 +3,20 @@
 package model
 
 type AuthUserCreate struct {
-	FirstName string `json:"FirstName"`
-	LastName  string `json:"LastName"`
-	Email     string `json:"Email"`
-	Password  string `json:"Password"`
+	Username  string `json:"username"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
 }
 
 type AuthUserResponse struct {
-	ID          *string `json:"Id,omitempty"`
-	FirstName   string  `json:"FirstName"`
-	LastName    string  `json:"LastName"`
-	Email       string  `json:"Email"`
-	TimeCreated string  `json:"TimeCreated"`
-	TimeUpdated string  `json:"TimeUpdated"`
+	ID        int32  `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type Mutation struct {

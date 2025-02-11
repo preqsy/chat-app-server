@@ -5,5 +5,5 @@ import (
 )
 
 type Datastore interface {
-	SaveUser(user *models.AuthUser) error
+	SaveUser(user *models.AuthUser) (*models.AuthUser, error)
 }

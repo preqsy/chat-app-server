@@ -6,16 +6,45 @@ package graph
 
 import (
 	"chat_app_server/graph/model"
+	models "chat_app_server/model"
 	"context"
 	"fmt"
+	"time"
 )
 
 // CreateAuthUser is the resolver for the createAuthUser field.
 func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthUserCreate) (*model.AuthUserResponse, error) {
-	panic(fmt.Errorf("not implemented: CreateAuthUser - createAuthUser"))
+	newUser := models.AuthUser{
+		Email:     input.Email,
+		Password:  input.Password,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Username:  input.Username,
+	}
+	savedUser, err := r.service.SaveUser(&newUser)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AuthUserResponse{
+		ID:        int32(savedUser.ID),
+		Email:     savedUser.Email,
+		FirstName: savedUser.FirstName,
+		LastName:  savedUser.LastName,
+		CreatedAt: savedUser.CreatedAt.Format(time.RFC3339),
+		// TimeUpdated: savedUser.UpdatedAt.Format(time.RFC3339),
+	}, nil
+}
+
+// Placeholder is the resolver for the placeholder field.
+func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
+	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
 }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
 type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

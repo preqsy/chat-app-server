@@ -2,6 +2,7 @@ package main
 
 import (
 	"chat_app_server/config"
+	auth "chat_app_server/core"
 	database "chat_app_server/database/postgres"
 	"chat_app_server/graph"
 	"log"
@@ -20,21 +21,15 @@ const defaultPort = "8080"
 func main() {
 	secret := config.GetSecrets()
 
-	_, err := database.ConnectDB(secret.Host, secret.Db_User, secret.Password, secret.DbName, secret.Port)
+	datastore, err := database.ConnectDB(secret.Host, secret.Db_User, secret.Password, secret.DbName, secret.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// coreService := auth.CoreService(datastore)
-	// coreService.SaveUser(&models.AuthUserCreate{
-	// 	Email:     "tests@test.com",
-	// 	Password:  "test",
-	// 	FirstName: "Test",
-	// 	LastName:  "Test",
-	// 	Username:  "tests",
-	// })
+	coreService := auth.CoreService(datastore)
+	resolver := graph.NewResolver(coreService)
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
