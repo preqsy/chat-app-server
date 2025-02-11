@@ -14,13 +14,14 @@ type PostgresDB struct {
 	client *gorm.DB
 }
 
-func (db *PostgresDB) SaveUser(user *models.AuthUser) error {
+func (db *PostgresDB) SaveUser(user *models.AuthUser) (*models.AuthUser, error) {
 	result := db.client.Create(user)
 	if result.Error != nil {
 		logrus.Error("Failed to save user: ", result.Error)
-		return result.Error
+		return nil, result.Error
 	}
-	return nil
+	fmt.Println("User saved: ", user)
+	return user, nil
 }
 
 func ConnectDB(host, user, password, dbname, port string) (*PostgresDB, error) {

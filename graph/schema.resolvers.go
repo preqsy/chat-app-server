@@ -6,18 +6,38 @@ package graph
 
 import (
 	"chat_app_server/graph/model"
+	models "chat_app_server/model"
 	"context"
 	"fmt"
+	"time"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// CreateAuthUser is the resolver for the createAuthUser field.
+func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthUserCreate) (*model.AuthUserResponse, error) {
+	newUser := models.AuthUser{
+		Email:     input.Email,
+		Password:  input.Password,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Username:  input.Username,
+	}
+	savedUser, err := r.service.SaveUser(&newUser)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AuthUserResponse{
+		ID:        int32(savedUser.ID),
+		Email:     savedUser.Email,
+		FirstName: savedUser.FirstName,
+		LastName:  savedUser.LastName,
+		CreatedAt: savedUser.CreatedAt.Format(time.RFC3339),
+		// TimeUpdated: savedUser.UpdatedAt.Format(time.RFC3339),
+	}, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// Placeholder is the resolver for the placeholder field.
+func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
+	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
 }
 
 // Mutation returns MutationResolver implementation.
