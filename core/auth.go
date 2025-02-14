@@ -16,15 +16,23 @@ func CoreService(datastore datastore.Datastore) *Service {
 	}
 }
 
-func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUser, error) {
+func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUserRegisterResponse, error) {
 
-	user.Password, _ = utils.HashPassword(user.Password)
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
+	user.Password, _ = utils.HashPassword(user.Password)
 	savedUser, err := s.datastore.SaveUser(user)
 	if err != nil {
 		return nil, err
 	}
-	return savedUser, nil
+	token, err := utils.GenerateAccessToken(savedUser.ID)
+	if err != nil {
+		return nil, err
+	}
+	response := &models.AuthUserRegisterResponse{
+		AuthUser: *savedUser,
+		Token:    token,
+	}
+	return response, nil
 }

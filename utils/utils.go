@@ -16,14 +16,14 @@ func HashPassword(password string) (string, error) {
 	return string(hashePassword), nil
 }
 
-func GenerateAccessToken(userID string) (string, error) {
+func GenerateAccessToken(userID uint) (string, error) {
 	secret := config.GetSecrets()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"exp":     time.Now().Add(time.Hour * 1).Unix(),
 	})
-
-	tokenString, err := token.SignedString(secret.JwtSecret)
+	secretBytes := []byte(secret.JwtSecret)
+	tokenString, err := token.SignedString(secretBytes)
 	if err != nil {
 		return "", err
 	}

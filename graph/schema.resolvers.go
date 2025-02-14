@@ -26,12 +26,14 @@ func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthU
 		return nil, err
 	}
 	return &model.AuthUserResponse{
-		ID:        int32(savedUser.ID),
-		Email:     savedUser.Email,
-		FirstName: savedUser.FirstName,
-		LastName:  savedUser.LastName,
-		CreatedAt: savedUser.CreatedAt.Format(time.RFC3339),
-		// TimeUpdated: savedUser.UpdatedAt.Format(time.RFC3339),
+		AuthUser: &model.AuthUser{
+			ID:        int32(savedUser.AuthUser.ID),
+			Email:     savedUser.AuthUser.Email,
+			FirstName: savedUser.AuthUser.FirstName,
+			LastName:  savedUser.AuthUser.LastName,
+			CreatedAt: savedUser.AuthUser.CreatedAt.Format(time.RFC3339),
+		},
+		Token: savedUser.Token,
 	}, nil
 }
 

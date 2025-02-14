@@ -25,12 +25,17 @@ type AuthUserCreate struct {
 	Username  string `json:"username"`
 }
 
+type AuthUserRegisterResponse struct {
+	AuthUser AuthUser `json:"authUser"`
+	Token    string   `json:"token"`
+}
+
 func (a *AuthUser) Validate() error {
 	if err := validation.ValidateStruct(
 		a,
 		validation.Field(&a.Email, validation.Required, is.Email),
-		validation.Field(&a.Username, validation.Required, validation.Length(6, 32)),
-		validation.Field(&a.Password, validation.Required, validation.Length(6, 32)),
+		validation.Field(&a.Username, validation.Required, validation.Length(3, 32)),
+		validation.Field(&a.Password, validation.Required, validation.Length(4, 32)),
 	); err != nil {
 		return err
 	}

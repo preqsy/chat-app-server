@@ -6,13 +6,19 @@ input AuthUserCreate {
   password: String!
 }
 
-type AuthUserResponse {
+type AuthUser {
   id: Int!
+  username: String!
   firstName: String!
   lastName: String!
   email: String!
   createdAt: String!
   updatedAt: String!
+}
+
+type AuthUserResponse {
+  authUser: AuthUser!
+  token: String!
 }
 
 type Query {

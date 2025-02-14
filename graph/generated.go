@@ -47,13 +47,19 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	AuthUserResponse struct {
+	AuthUser struct {
 		CreatedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
 		FirstName func(childComplexity int) int
 		ID        func(childComplexity int) int
 		LastName  func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
+		Username  func(childComplexity int) int
+	}
+
+	AuthUserResponse struct {
+		AuthUser func(childComplexity int) int
+		Token    func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -91,47 +97,68 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "AuthUserResponse.createdAt":
-		if e.complexity.AuthUserResponse.CreatedAt == nil {
+	case "AuthUser.createdAt":
+		if e.complexity.AuthUser.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.AuthUserResponse.CreatedAt(childComplexity), true
+		return e.complexity.AuthUser.CreatedAt(childComplexity), true
 
-	case "AuthUserResponse.email":
-		if e.complexity.AuthUserResponse.Email == nil {
+	case "AuthUser.email":
+		if e.complexity.AuthUser.Email == nil {
 			break
 		}
 
-		return e.complexity.AuthUserResponse.Email(childComplexity), true
+		return e.complexity.AuthUser.Email(childComplexity), true
 
-	case "AuthUserResponse.firstName":
-		if e.complexity.AuthUserResponse.FirstName == nil {
+	case "AuthUser.firstName":
+		if e.complexity.AuthUser.FirstName == nil {
 			break
 		}
 
-		return e.complexity.AuthUserResponse.FirstName(childComplexity), true
+		return e.complexity.AuthUser.FirstName(childComplexity), true
 
-	case "AuthUserResponse.id":
-		if e.complexity.AuthUserResponse.ID == nil {
+	case "AuthUser.id":
+		if e.complexity.AuthUser.ID == nil {
 			break
 		}
 
-		return e.complexity.AuthUserResponse.ID(childComplexity), true
+		return e.complexity.AuthUser.ID(childComplexity), true
 
-	case "AuthUserResponse.lastName":
-		if e.complexity.AuthUserResponse.LastName == nil {
+	case "AuthUser.lastName":
+		if e.complexity.AuthUser.LastName == nil {
 			break
 		}
 
-		return e.complexity.AuthUserResponse.LastName(childComplexity), true
+		return e.complexity.AuthUser.LastName(childComplexity), true
 
-	case "AuthUserResponse.updatedAt":
-		if e.complexity.AuthUserResponse.UpdatedAt == nil {
+	case "AuthUser.updatedAt":
+		if e.complexity.AuthUser.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.AuthUserResponse.UpdatedAt(childComplexity), true
+		return e.complexity.AuthUser.UpdatedAt(childComplexity), true
+
+	case "AuthUser.username":
+		if e.complexity.AuthUser.Username == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.Username(childComplexity), true
+
+	case "AuthUserResponse.authUser":
+		if e.complexity.AuthUserResponse.AuthUser == nil {
+			break
+		}
+
+		return e.complexity.AuthUserResponse.AuthUser(childComplexity), true
+
+	case "AuthUserResponse.token":
+		if e.complexity.AuthUserResponse.Token == nil {
+			break
+		}
+
+		return e.complexity.AuthUserResponse.Token(childComplexity), true
 
 	case "Mutation.createAuthUser":
 		if e.complexity.Mutation.CreateAuthUser == nil {
@@ -423,8 +450,8 @@ func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _AuthUserResponse_id(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthUserResponse_id(ctx, field)
+func (ec *executionContext) _AuthUser_id(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -454,9 +481,9 @@ func (ec *executionContext) _AuthUserResponse_id(ctx context.Context, field grap
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthUserResponse_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthUser_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthUserResponse",
+		Object:     "AuthUser",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -467,8 +494,52 @@ func (ec *executionContext) fieldContext_AuthUserResponse_id(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthUserResponse_firstName(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthUserResponse_firstName(ctx, field)
+func (ec *executionContext) _AuthUser_username(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_username(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Username, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AuthUser_username(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AuthUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AuthUser_firstName(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_firstName(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -498,9 +569,9 @@ func (ec *executionContext) _AuthUserResponse_firstName(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthUserResponse_firstName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthUser_firstName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthUserResponse",
+		Object:     "AuthUser",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -511,8 +582,8 @@ func (ec *executionContext) fieldContext_AuthUserResponse_firstName(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthUserResponse_lastName(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthUserResponse_lastName(ctx, field)
+func (ec *executionContext) _AuthUser_lastName(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_lastName(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -542,9 +613,9 @@ func (ec *executionContext) _AuthUserResponse_lastName(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthUserResponse_lastName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthUser_lastName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthUserResponse",
+		Object:     "AuthUser",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -555,8 +626,8 @@ func (ec *executionContext) fieldContext_AuthUserResponse_lastName(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthUserResponse_email(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthUserResponse_email(ctx, field)
+func (ec *executionContext) _AuthUser_email(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_email(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -586,9 +657,9 @@ func (ec *executionContext) _AuthUserResponse_email(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthUserResponse_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthUser_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthUserResponse",
+		Object:     "AuthUser",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -599,8 +670,8 @@ func (ec *executionContext) fieldContext_AuthUserResponse_email(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthUserResponse_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthUserResponse_createdAt(ctx, field)
+func (ec *executionContext) _AuthUser_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -630,9 +701,9 @@ func (ec *executionContext) _AuthUserResponse_createdAt(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthUserResponse_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthUser_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthUserResponse",
+		Object:     "AuthUser",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -643,8 +714,8 @@ func (ec *executionContext) fieldContext_AuthUserResponse_createdAt(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthUserResponse_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthUserResponse_updatedAt(ctx, field)
+func (ec *executionContext) _AuthUser_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUser_updatedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -674,7 +745,111 @@ func (ec *executionContext) _AuthUserResponse_updatedAt(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthUserResponse_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthUser_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AuthUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AuthUserResponse_authUser(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUserResponse_authUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AuthUser, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AuthUser)
+	fc.Result = res
+	return ec.marshalNAuthUser2ᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AuthUserResponse_authUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AuthUserResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AuthUser_id(ctx, field)
+			case "username":
+				return ec.fieldContext_AuthUser_username(ctx, field)
+			case "firstName":
+				return ec.fieldContext_AuthUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_AuthUser_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_AuthUser_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AuthUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AuthUser_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AuthUserResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.AuthUserResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthUserResponse_token(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AuthUserResponse_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AuthUserResponse",
 		Field:      field,
@@ -726,18 +901,10 @@ func (ec *executionContext) fieldContext_Mutation_createAuthUser(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_AuthUserResponse_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_AuthUserResponse_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_AuthUserResponse_lastName(ctx, field)
-			case "email":
-				return ec.fieldContext_AuthUserResponse_email(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_AuthUserResponse_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_AuthUserResponse_updatedAt(ctx, field)
+			case "authUser":
+				return ec.fieldContext_AuthUserResponse_authUser(ctx, field)
+			case "token":
+				return ec.fieldContext_AuthUserResponse_token(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AuthUserResponse", field.Name)
 		},
@@ -2942,6 +3109,75 @@ func (ec *executionContext) unmarshalInputAuthUserCreate(ctx context.Context, ob
 
 // region    **************************** object.gotpl ****************************
 
+var authUserImplementors = []string{"AuthUser"}
+
+func (ec *executionContext) _AuthUser(ctx context.Context, sel ast.SelectionSet, obj *model.AuthUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authUserImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthUser")
+		case "id":
+			out.Values[i] = ec._AuthUser_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "username":
+			out.Values[i] = ec._AuthUser_username(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "firstName":
+			out.Values[i] = ec._AuthUser_firstName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastName":
+			out.Values[i] = ec._AuthUser_lastName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._AuthUser_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._AuthUser_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._AuthUser_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var authUserResponseImplementors = []string{"AuthUserResponse"}
 
 func (ec *executionContext) _AuthUserResponse(ctx context.Context, sel ast.SelectionSet, obj *model.AuthUserResponse) graphql.Marshaler {
@@ -2953,33 +3189,13 @@ func (ec *executionContext) _AuthUserResponse(ctx context.Context, sel ast.Selec
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AuthUserResponse")
-		case "id":
-			out.Values[i] = ec._AuthUserResponse_id(ctx, field, obj)
+		case "authUser":
+			out.Values[i] = ec._AuthUserResponse_authUser(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "firstName":
-			out.Values[i] = ec._AuthUserResponse_firstName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "lastName":
-			out.Values[i] = ec._AuthUserResponse_lastName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "email":
-			out.Values[i] = ec._AuthUserResponse_email(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createdAt":
-			out.Values[i] = ec._AuthUserResponse_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updatedAt":
-			out.Values[i] = ec._AuthUserResponse_updatedAt(ctx, field, obj)
+		case "token":
+			out.Values[i] = ec._AuthUserResponse_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3458,6 +3674,16 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAuthUser2ᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AuthUser(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNAuthUserCreate2chat_app_serverᚋgraphᚋmodelᚐAuthUserCreate(ctx context.Context, v any) (model.AuthUserCreate, error) {
 	res, err := ec.unmarshalInputAuthUserCreate(ctx, v)
