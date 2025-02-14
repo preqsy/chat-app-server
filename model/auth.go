@@ -1,6 +1,8 @@
 package models
 
 import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"gorm.io/gorm"
 )
 
@@ -21,4 +23,16 @@ type AuthUserCreate struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Username  string `json:"username"`
+}
+
+func (a *AuthUser) Validate() error {
+	if err := validation.ValidateStruct(
+		a,
+		validation.Field(&a.Email, validation.Required, is.Email),
+		validation.Field(&a.Username, validation.Required, validation.Length(6, 32)),
+		validation.Field(&a.Password, validation.Required, validation.Length(6, 32)),
+	); err != nil {
+		return err
+	}
+	return nil
 }

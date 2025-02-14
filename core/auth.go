@@ -19,6 +19,9 @@ func CoreService(datastore datastore.Datastore) *Service {
 func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUser, error) {
 
 	user.Password, _ = utils.HashPassword(user.Password)
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
 	savedUser, err := s.datastore.SaveUser(user)
 	if err != nil {
 		return nil, err
