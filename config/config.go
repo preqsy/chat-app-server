@@ -12,11 +12,12 @@ import (
 var ServiceName = "chat_app_server"
 
 type Secrets struct {
-	Db_User  string `json:"USER" envconfig:"DB_USER"`
-	DbName   string `json:"DBNAME" envconfig:"DBNAME"`
-	Password string `json:"PASSWORD" envconfig:"PASSWORD"`
-	Host     string `json:"HOST" envconfig:"HOST"`
-	Port     string `json:"PORT" envconfig:"PORT"`
+	Db_User   string `json:"USER" envconfig:"DB_USER"`
+	DbName    string `json:"DBNAME" envconfig:"DBNAME"`
+	Password  string `json:"PASSWORD" envconfig:"PASSWORD"`
+	Host      string `json:"HOST" envconfig:"HOST"`
+	Port      string `json:"PORT" envconfig:"PORT"`
+	JwtSecret string `json:"JWT_SECRET" envconfig:"JWT_SECRET"`
 }
 
 var ss Secrets
@@ -34,6 +35,7 @@ func init() {
 	ss.Password = os.Getenv("PASSWORD")
 	ss.Host = os.Getenv("HOST")
 	ss.Port = os.Getenv("PORT")
+	ss.JwtSecret = os.Getenv("JWT_SECRET")
 }
 
 func GetSecrets() Secrets {
