@@ -21,6 +21,15 @@ type AuthUserRegisterResponse struct {
 	Token    string   `json:"token"`
 }
 
+type AuthUserLogin struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type AuthUserLoginResponse struct {
+	Token string `json:"token"`
+}
+
 func (a *AuthUser) Validate() error {
 	if err := validation.ValidateStruct(
 		a,

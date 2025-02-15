@@ -24,6 +24,16 @@ func (db *PostgresDB) SaveUser(user *models.AuthUser) (*models.AuthUser, error) 
 	return user, nil
 }
 
+func (db *PostgresDB) GetUserByEmail(email string) (*models.AuthUser, error) {
+	var user models.AuthUser
+	err := db.client.Where("email = ?", email).First(&user)
+	if err != nil {
+		return nil, err.Error
+	}
+	return &user, nil
+
+}
+
 func ConnectDB(host, user, password, dbname, port string) (*PostgresDB, error) {
 	logrus.Info("Connecting to database.........")
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", host, user, password, dbname, port)

@@ -37,3 +37,22 @@ func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUserRegisterRespo
 	}
 	return response, nil
 }
+
+func (s *Service) LoginUser(payload *models.AuthUserLogin) (string, error) {
+	user, err := s.datastore.GetUserByEmail(payload.Email)
+	if err != nil {
+		return "", err
+	}
+	err = utils.VerifyPassword(user.Password, payload.Password)
+
+	if err != nil {
+		return "", err
+	}
+	token, err := jwt_utils.GenerateAccessToken(user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+
+}
