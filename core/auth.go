@@ -2,6 +2,7 @@ package auth
 
 import (
 	datastore "chat_app_server/database"
+	"chat_app_server/jwt_utils"
 	models "chat_app_server/model"
 	"chat_app_server/utils"
 )
@@ -26,7 +27,7 @@ func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUserRegisterRespo
 	if err != nil {
 		return nil, err
 	}
-	token, err := utils.GenerateAccessToken(savedUser.ID)
+	token, err := jwt_utils.GenerateAccessToken(savedUser.ID)
 	if err != nil {
 		return nil, err
 	}
