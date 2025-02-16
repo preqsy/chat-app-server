@@ -6,6 +6,11 @@ input AuthUserCreate {
   password: String!
 }
 
+input AuthUserLogin {
+  email: String!
+  password: String!
+}
+
 type AuthUser {
   id: Int!
   username: String!
@@ -21,10 +26,15 @@ type AuthUserResponse {
   token: String!
 }
 
+type LoginResponse {
+  token: String!
+}
+
 type Query {
   placeholder: String
 }
 
 type Mutation {
   createAuthUser(input: AuthUserCreate!): AuthUserResponse!
+  loginAuthUser(input: AuthUserLogin!): LoginResponse!
 }

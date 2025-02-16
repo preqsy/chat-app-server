@@ -37,6 +37,19 @@ func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthU
 	}, nil
 }
 
+// LoginAuthUser is the resolver for the loginAuthUser field.
+func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUserLogin) (*model.LoginResponse, error) {
+	user := models.AuthUserLogin{
+		Email:    input.Email,
+		Password: input.Password,
+	}
+	token, err := r.service.LoginUser(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &model.LoginResponse{Token: token}, nil
+}
+
 // Placeholder is the resolver for the placeholder field.
 func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
 	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))

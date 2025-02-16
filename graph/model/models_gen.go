@@ -20,9 +20,18 @@ type AuthUserCreate struct {
 	Password  string `json:"password"`
 }
 
+type AuthUserLogin struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type AuthUserResponse struct {
 	AuthUser *AuthUser `json:"authUser"`
 	Token    string    `json:"token"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
 }
 
 type Mutation struct {

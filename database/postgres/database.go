@@ -26,9 +26,9 @@ func (db *PostgresDB) SaveUser(user *models.AuthUser) (*models.AuthUser, error) 
 
 func (db *PostgresDB) GetUserByEmail(email string) (*models.AuthUser, error) {
 	var user models.AuthUser
-	err := db.client.Where("email = ?", email).First(&user)
-	if err != nil {
-		return nil, err.Error
+	result := db.client.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 	return &user, nil
 
