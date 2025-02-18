@@ -2,9 +2,11 @@ package jwt_utils
 
 import (
 	"chat_app_server/config"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sirupsen/logrus"
 )
 
 func GenerateAccessToken(userID uint) (string, error) {
@@ -20,4 +22,33 @@ func GenerateAccessToken(userID uint) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func VerifyAccessToken(tokenString string) (uint, error) {
+	secret := config.GetSecrets()
+
+	secretKey := []byte(secret.JwtSecret)
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+
+	if err != nil {
+		logrus.Error("Invalid Token")
+		return 0, err
+	}
+	userID := token.Claims.(jwt.MapClaims)["user_id"].(float64)
+	if userID == 0 {
+		return 0, fmt.Errorf("Invalid User")
+	}
+
+	if !token.Valid {
+		return 0, fmt.Errorf("invalid token")
+	}
+
+	return uint(userID), nil
+}
+
+func GetCurrentAuthUser() {
+
 }
