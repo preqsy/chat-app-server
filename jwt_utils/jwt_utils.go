@@ -2,12 +2,22 @@ package jwt_utils
 
 import (
 	"chat_app_server/config"
+	datastore "chat_app_server/database"
+	models "chat_app_server/model"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 )
+
+type JWTUtils struct {
+	db datastore.Datastore
+}
+
+func InitDB(database datastore.Datastore) *JWTUtils {
+	return &JWTUtils{db: database}
+}
 
 func GenerateAccessToken(userID uint) (string, error) {
 	secret := config.GetSecrets()
@@ -49,6 +59,15 @@ func VerifyAccessToken(tokenString string) (uint, error) {
 	return uint(userID), nil
 }
 
-func GetCurrentAuthUser() {
+func (j *JWTUtils) GetCurrentAuthUser(token string) (*models.AuthUser, error) {
+	userId, err := VerifyAccessToken(token)
+	if err != nil {
+		return nil, err
+	}
+	data, err := j.db.GetUserById(userId)
+	if err != nil {
+		return nil, err
+	}
 
+	return data, nil
 }

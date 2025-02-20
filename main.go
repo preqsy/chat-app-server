@@ -5,6 +5,7 @@ import (
 	auth "chat_app_server/core"
 	database "chat_app_server/database/postgres"
 	"chat_app_server/graph"
+	"chat_app_server/jwt_utils"
 	"chat_app_server/middleware"
 	"log"
 	"net/http"
@@ -28,7 +29,8 @@ func main() {
 	}
 
 	coreService := auth.CoreService(datastore)
-	resolver := graph.NewResolver(coreService)
+	jwtService := jwt_utils.InitDB(datastore)
+	resolver := graph.NewResolver(coreService, jwtService)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 

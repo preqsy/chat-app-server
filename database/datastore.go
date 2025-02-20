@@ -7,4 +7,5 @@ import (
 type Datastore interface {
 	SaveUser(user *models.AuthUser) (*models.AuthUser, error)
 	GetUserByEmail(email string) (*models.AuthUser, error)
+	GetUserById(userId uint) (*models.AuthUser, error)
 }
