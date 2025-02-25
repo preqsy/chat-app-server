@@ -3,14 +3,19 @@ package graph
 // This file will not be regenerated automatically.
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
-import "chat_app_server/core"
+import (
+	auth "chat_app_server/core"
+	"chat_app_server/jwt_utils"
+)
 
 type Resolver struct {
-	service *auth.Service
+	service   *auth.Service
+	jwt_utils *jwt_utils.JWTUtils
 }
 
-func NewResolver(service *auth.Service) *Resolver {
+func NewResolver(service *auth.Service, jwt_utils *jwt_utils.JWTUtils) *Resolver {
 	return &Resolver{
-		service: service,
+		service:   service,
+		jwt_utils: jwt_utils,
 	}
 }

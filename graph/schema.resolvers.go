@@ -26,18 +26,49 @@ func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthU
 		return nil, err
 	}
 	return &model.AuthUserResponse{
-		ID:        int32(savedUser.ID),
-		Email:     savedUser.Email,
-		FirstName: savedUser.FirstName,
-		LastName:  savedUser.LastName,
-		CreatedAt: savedUser.CreatedAt.Format(time.RFC3339),
-		// TimeUpdated: savedUser.UpdatedAt.Format(time.RFC3339),
+		AuthUser: &model.AuthUser{
+			ID:        int32(savedUser.AuthUser.ID),
+			Email:     savedUser.AuthUser.Email,
+			FirstName: savedUser.AuthUser.FirstName,
+			LastName:  savedUser.AuthUser.LastName,
+			CreatedAt: savedUser.AuthUser.CreatedAt.Format(time.RFC3339),
+		},
+		Token: savedUser.Token,
 	}, nil
+}
+
+// LoginAuthUser is the resolver for the loginAuthUser field.
+func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUserLogin) (*model.LoginResponse, error) {
+	user := models.AuthUserLogin{
+		Email:    input.Email,
+		Password: input.Password,
+	}
+	token, err := r.service.LoginUser(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &model.LoginResponse{Token: token}, nil
 }
 
 // Placeholder is the resolver for the placeholder field.
 func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
 	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
+}
+func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
+
+	user, err := r.jwt_utils.GetCurrentAuthUser(token)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AuthUser{
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		UpdatedAt: user.UpdatedAt.String(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt.String(),
+		ID:        int32(user.ID),
+	}, nil
 }
 
 // Mutation returns MutationResolver implementation.

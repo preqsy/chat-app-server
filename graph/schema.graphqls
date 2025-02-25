@@ -6,8 +6,14 @@ input AuthUserCreate {
   password: String!
 }
 
-type AuthUserResponse {
+input AuthUserLogin {
+  email: String!
+  password: String!
+}
+
+type AuthUser {
   id: Int!
+  username: String!
   firstName: String!
   lastName: String!
   email: String!
@@ -15,10 +21,25 @@ type AuthUserResponse {
   updatedAt: String!
 }
 
+type AuthUserResponse {
+  authUser: AuthUser!
+  token: String!
+}
+
+type LoginResponse {
+  token: String!
+}
+
+type UserEmail {
+  email: String!
+}
+
 type Query {
   placeholder: String
+  getCurrentUser(token: String!): AuthUser
 }
 
 type Mutation {
   createAuthUser(input: AuthUserCreate!): AuthUserResponse!
+  loginAuthUser(input: AuthUserLogin!): LoginResponse!
 }
