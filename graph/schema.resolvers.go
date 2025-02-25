@@ -54,6 +54,22 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
 	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
 }
+func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
+
+	user, err := r.jwt_utils.GetCurrentAuthUser(token)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AuthUser{
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		UpdatedAt: user.UpdatedAt.String(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt.String(),
+		ID:        int32(user.ID),
+	}, nil
+}
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }

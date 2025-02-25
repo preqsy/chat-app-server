@@ -72,3 +72,11 @@ func (s *Service) LoginUser(payload *models.AuthUserLogin) (string, error) {
 	return token, nil
 
 }
+
+func (s *Service) GetCurrentUser(email string) (*models.AuthUser, error) {
+	user, err := s.datastore.GetUserByEmail(email)
+	if err != nil {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+	return user, nil
+}

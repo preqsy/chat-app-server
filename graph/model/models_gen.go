@@ -39,3 +39,7 @@ type Mutation struct {
 
 type Query struct {
 }
+
+type UserEmail struct {
+	Email string `json:"email"`
+}
