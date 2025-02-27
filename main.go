@@ -9,12 +9,15 @@ import (
 	"chat_app_server/middleware"
 	"log"
 	"net/http"
+	"slices"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -34,6 +37,19 @@ func main() {
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				origin := r.Header.Get("Origin")
+				if origin == "" || origin == r.Header.Get("Host") {
+					return true
+				}
+				return slices.Contains([]string{":5172", "http://localhost:5172"}, origin)
+
+			},
+		},
+	})
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})

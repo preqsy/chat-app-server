@@ -54,8 +54,9 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
 	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
 }
-func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
 
+// GetCurrentUser is the resolver for the getCurrentUser field.
+func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
 	user, err := r.jwt_utils.GetCurrentAuthUser(token)
 	if err != nil {
 		return nil, err
@@ -71,11 +72,48 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 	}, nil
 }
 
+// CurrentTime is the resolver for the currentTime field.
+func (r *subscriptionResolver) CurrentTime(ctx context.Context) (<-chan *model.Time, error) {
+	ch := make(chan *model.Time)
+
+	go func() {
+		defer close(ch)
+
+		count := 1
+		for {
+			time.Sleep(1)
+			count = count + 1
+			fmt.Println("Tick", count)
+
+			currentTime := time.Now()
+
+			t := &model.Time{
+				UnixTime:  int32(currentTime.Unix()),
+				TimeStamp: currentTime.Format(time.RFC3339),
+			}
+
+			select {
+			case <-ctx.Done():
+				fmt.Println("Subscription Closed at", count)
+				return
+			case ch <- t:
+
+			}
+
+		}
+	}()
+	return ch, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

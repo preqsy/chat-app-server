@@ -33,6 +33,14 @@ type LoginResponse {
 type UserEmail {
   email: String!
 }
+type Time {
+  unixTime: Int!
+  timeStamp: String!
+}
+
+# type MessageInput {
+
+# }
 
 type Query {
   placeholder: String
@@ -42,4 +50,8 @@ type Query {
 type Mutation {
   createAuthUser(input: AuthUserCreate!): AuthUserResponse!
   loginAuthUser(input: AuthUserLogin!): LoginResponse!
+}
+
+type Subscription {
+  currentTime: Time!
 }

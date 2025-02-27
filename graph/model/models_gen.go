@@ -40,6 +40,14 @@ type Mutation struct {
 type Query struct {
 }
 
+type Subscription struct {
+}
+
+type Time struct {
+	UnixTime  int32  `json:"unixTime"`
+	TimeStamp string `json:"timeStamp"`
+}
+
 type UserEmail struct {
 	Email string `json:"email"`
 }
