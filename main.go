@@ -3,7 +3,7 @@ package main
 import (
 	"chat_app_server/config"
 	auth "chat_app_server/core"
-	database "chat_app_server/database/postgres"
+	database "chat_app_server/database/crud"
 	"chat_app_server/graph"
 	"chat_app_server/jwt_utils"
 	"chat_app_server/middleware"
