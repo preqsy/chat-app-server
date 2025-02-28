@@ -2,7 +2,7 @@ package main
 
 import (
 	"chat_app_server/config"
-	auth "chat_app_server/core"
+	"chat_app_server/core"
 	database "chat_app_server/database/crud"
 	"chat_app_server/graph"
 	"chat_app_server/jwt_utils"
@@ -31,7 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	coreService := auth.CoreService(datastore)
+	coreService := core.CoreService(datastore)
 	jwtService := jwt_utils.InitDB(datastore)
 	resolver := graph.NewResolver(coreService, jwtService)
 

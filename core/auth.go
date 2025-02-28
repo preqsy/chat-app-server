@@ -1,7 +1,6 @@
-package auth
+package core
 
 import (
-	datastore "chat_app_server/database"
 	"chat_app_server/jwt_utils"
 	models "chat_app_server/model"
 	"chat_app_server/utils"
@@ -11,16 +10,6 @@ import (
 
 	"gorm.io/gorm"
 )
-
-type Service struct {
-	datastore datastore.Datastore
-}
-
-func CoreService(datastore datastore.Datastore) *Service {
-	return &Service{
-		datastore: datastore,
-	}
-}
 
 func (s *Service) SaveUser(ctx context.Context, user *models.AuthUser) (*models.AuthUserRegisterResponse, error) {
 	if err := user.Validate(); err != nil {

@@ -7,5 +7,5 @@ type Message struct {
 
 	Sender   string `json:"sender" gorm:"not null"`
 	Receiver string `json:"receiver" gorm:"not null"`
-	Content  string `json:"content" gorm: "not null"`
+	Content  string `json:"content" gorm:"not null"`
 }
