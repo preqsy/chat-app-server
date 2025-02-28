@@ -5,6 +5,7 @@ import (
 	"chat_app_server/jwt_utils"
 	models "chat_app_server/model"
 	"chat_app_server/utils"
+	"context"
 	"fmt"
 	"strings"
 
@@ -21,17 +22,17 @@ func CoreService(datastore datastore.Datastore) *Service {
 	}
 }
 
-func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUserRegisterResponse, error) {
+func (s *Service) SaveUser(ctx context.Context, user *models.AuthUser) (*models.AuthUserRegisterResponse, error) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
-	_, err := s.datastore.GetUserByEmail(user.Email)
+	_, err := s.datastore.GetUserByEmail(ctx, user.Email)
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			user.Password, _ = utils.HashPassword(user.Password)
 			user.Email = strings.ToLower(user.Email)
-			savedUser, err := s.datastore.SaveUser(user)
+			savedUser, err := s.datastore.SaveUser(ctx, user)
 			if err != nil {
 				if strings.Contains(err.Error(), "uni_auth_users_email") {
 					return nil, fmt.Errorf("account with email %s already exists", user.Email)
@@ -54,8 +55,8 @@ func (s *Service) SaveUser(user *models.AuthUser) (*models.AuthUserRegisterRespo
 	return nil, fmt.Errorf("account with email %s already exists", user.Email)
 }
 
-func (s *Service) LoginUser(payload *models.AuthUserLogin) (string, error) {
-	user, err := s.datastore.GetUserByEmail(payload.Email)
+func (s *Service) LoginUser(ctx context.Context, payload *models.AuthUserLogin) (string, error) {
+	user, err := s.datastore.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
 		return "", fmt.Errorf("invalid credentials")
 	}
@@ -73,8 +74,8 @@ func (s *Service) LoginUser(payload *models.AuthUserLogin) (string, error) {
 
 }
 
-func (s *Service) GetCurrentUser(email string) (*models.AuthUser, error) {
-	user, err := s.datastore.GetUserByEmail(email)
+func (s *Service) GetCurrentUser(ctx context.Context, email string) (*models.AuthUser, error) {
+	user, err := s.datastore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}

@@ -9,6 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type PostgresDB struct {
+	client *gorm.DB
+}
+
 func ConnectDB(host, user, password, dbname, port string) (*PostgresDB, error) {
 	logrus.Info("Connecting to database.........")
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", host, user, password, dbname, port)
@@ -18,7 +22,7 @@ func ConnectDB(host, user, password, dbname, port string) (*PostgresDB, error) {
 		return nil, err
 	}
 	logrus.Info("Connected to database")
-	db.AutoMigrate(&models.AuthUser{})
+	db.AutoMigrate(&models.AuthUser{}, &models.Message{})
 
 	return &PostgresDB{client: db}, nil
 }

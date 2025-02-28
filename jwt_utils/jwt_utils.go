@@ -4,6 +4,7 @@ import (
 	"chat_app_server/config"
 	datastore "chat_app_server/database"
 	models "chat_app_server/model"
+	"context"
 	"fmt"
 	"time"
 
@@ -59,12 +60,12 @@ func VerifyAccessToken(tokenString string) (uint, error) {
 	return uint(userID), nil
 }
 
-func (j *JWTUtils) GetCurrentAuthUser(token string) (*models.AuthUser, error) {
+func (j *JWTUtils) GetCurrentAuthUser(ctx context.Context, token string) (*models.AuthUser, error) {
 	userId, err := VerifyAccessToken(token)
 	if err != nil {
 		return nil, err
 	}
-	data, err := j.db.GetUserById(userId)
+	data, err := j.db.GetUserById(ctx, userId)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthU
 		LastName:  input.LastName,
 		Username:  input.Username,
 	}
-	savedUser, err := r.service.SaveUser(&newUser)
+	savedUser, err := r.service.SaveUser(ctx, &newUser)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 		Email:    input.Email,
 		Password: input.Password,
 	}
-	token, err := r.service.LoginUser(&user)
+	token, err := r.service.LoginUser(ctx, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
 
 // GetCurrentUser is the resolver for the getCurrentUser field.
 func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
-	user, err := r.jwt_utils.GetCurrentAuthUser(token)
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
 	if err != nil {
 		return nil, err
 	}
