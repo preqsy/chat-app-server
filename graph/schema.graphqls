@@ -38,18 +38,28 @@ type Time {
   timeStamp: String!
 }
 
-# type MessageInput {
-
-# }
+input MessageInput {
+  id: ID!
+  sender: ID!
+  receiver: Int!
+  content: String!
+}
+type MessageResponse {
+  id: Int!
+  sender: Int!
+  receiver: Int!
+  content: String!
+  createdAt: String!
+}
 
 type Query {
-  placeholder: String
   getCurrentUser(token: String!): AuthUser
 }
 
 type Mutation {
   createAuthUser(input: AuthUserCreate!): AuthUserResponse!
   loginAuthUser(input: AuthUserLogin!): LoginResponse!
+  sendMessage(input: MessageInput!): MessageResponse!
 }
 
 type Subscription {

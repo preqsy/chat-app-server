@@ -9,6 +9,7 @@ import (
 	models "chat_app_server/model"
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -50,9 +51,34 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 	return &model.LoginResponse{Token: token}, nil
 }
 
-// Placeholder is the resolver for the placeholder field.
-func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
-	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
+// SendMessage is the resolver for the sendMessage field.
+func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error) {
+	request, ok := ctx.Value("request").(*http.Request)
+	if !ok {
+		return nil, fmt.Errorf("Request not found")
+	}
+	token := request.Header.Get("authorization")
+
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Print(user)
+	newMessage := models.Message{
+		Sender:   user.ID,
+		Receiver: uint(input.Receiver),
+		Content:  input.Content,
+	}
+	message, err := r.service.SaveMessage(ctx, &newMessage)
+	messageResponse := &model.MessageResponse{
+		Content:   message.Content,
+		Sender:    int32(message.Sender),
+		Receiver:  int32(message.Receiver),
+		CreatedAt: message.CreatedAt.String(),
+		ID:        int32(message.ID),
+	}
+	return messageResponse, nil
+	panic("Not implemented")
 }
 
 // GetCurrentUser is the resolver for the getCurrentUser field.

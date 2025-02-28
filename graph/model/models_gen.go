@@ -34,6 +34,21 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
+type MessageInput struct {
+	ID       string `json:"id"`
+	Sender   string `json:"sender"`
+	Receiver int32  `json:"receiver"`
+	Content  string `json:"content"`
+}
+
+type MessageResponse struct {
+	ID        int32  `json:"id"`
+	Sender    int32  `json:"sender"`
+	Receiver  int32  `json:"receiver"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}
+
 type Mutation struct {
 }
 
