@@ -35,7 +35,6 @@ type LoginResponse struct {
 }
 
 type MessageInput struct {
-	ID       string `json:"id"`
 	Sender   string `json:"sender"`
 	Receiver int32  `json:"receiver"`
 	Content  string `json:"content"`

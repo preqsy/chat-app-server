@@ -55,7 +55,7 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error) {
 	request, ok := ctx.Value("request").(*http.Request)
 	if !ok {
-		return nil, fmt.Errorf("Request not found")
+		return nil, fmt.Errorf("request not found")
 	}
 	token := request.Header.Get("authorization")
 
@@ -65,20 +65,23 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	}
 	fmt.Print(user)
 	newMessage := models.Message{
-		Sender:   user.ID,
-		Receiver: uint(input.Receiver),
-		Content:  input.Content,
+		SenderID:   user.ID,
+		ReceiverID: uint(input.Receiver),
+		Content:    input.Content,
 	}
 	message, err := r.service.SaveMessage(ctx, &newMessage)
+
+	if err != nil {
+		return nil, err
+	}
 	messageResponse := &model.MessageResponse{
 		Content:   message.Content,
-		Sender:    int32(message.Sender),
-		Receiver:  int32(message.Receiver),
+		Sender:    int32(message.SenderID),
+		Receiver:  int32(message.ReceiverID),
 		CreatedAt: message.CreatedAt.String(),
 		ID:        int32(message.ID),
 	}
 	return messageResponse, nil
-	panic("Not implemented")
 }
 
 // GetCurrentUser is the resolver for the getCurrentUser field.

@@ -39,7 +39,6 @@ type Time {
 }
 
 input MessageInput {
-  id: ID!
   sender: ID!
   receiver: Int!
   content: String!

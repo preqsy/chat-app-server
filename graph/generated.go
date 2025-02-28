@@ -3976,20 +3976,13 @@ func (ec *executionContext) unmarshalInputMessageInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "sender", "receiver", "content"}
+	fieldsInOrder := [...]string{"sender", "receiver", "content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
 		case "sender":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sender"))
 			data, err := ec.unmarshalNID2string(ctx, v)
