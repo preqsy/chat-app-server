@@ -8,8 +8,10 @@ import (
 	"chat_app_server/graph/model"
 	models "chat_app_server/model"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -63,13 +65,28 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print(user)
 	newMessage := models.Message{
 		SenderID:   user.ID,
 		ReceiverID: uint(input.Receiver),
 		Content:    input.Content,
 	}
+	msgJson, err := json.Marshal(newMessage)
+	if err != nil {
+		return nil, err
+	}
+	receiverIdString := strconv.Itoa(int(input.Receiver))
+	channel := "chat:" + receiverIdString
+	fmt.Println("This is the channel", channel)
+	fmt.Println("This is the message", string(msgJson))
+	err = r.redis_service.PublishMessage(channel, string(msgJson))
+
+	if err != nil {
+		return nil, err
+	}
+
 	message, err := r.service.SaveMessage(ctx, &newMessage)
+
+	fmt.Println("This is the saved message", message)
 
 	if err != nil {
 		return nil, err

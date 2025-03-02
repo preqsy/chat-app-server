@@ -4,9 +4,11 @@ import (
 	"chat_app_server/config"
 	"chat_app_server/core"
 	database "chat_app_server/database/crud"
+	"chat_app_server/external"
 	"chat_app_server/graph"
 	"chat_app_server/jwt_utils"
 	"chat_app_server/middleware"
+	"context"
 	"log"
 	"net/http"
 	"slices"
@@ -18,6 +20,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
+
+	// "github.com/redis/go-redis/v9"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -33,7 +38,13 @@ func main() {
 
 	coreService := core.CoreService(datastore)
 	jwtService := jwt_utils.InitDB(datastore)
-	resolver := graph.NewResolver(coreService, jwtService)
+	ctx := context.Background()
+
+	redisService, err := external.InitRedis(ctx)
+	if err != nil {
+		logrus.Fatal("Redis connection failed: %v", err)
+	}
+	resolver := graph.NewResolver(coreService, jwtService, redisService)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
