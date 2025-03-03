@@ -39,16 +39,20 @@ type Time {
 }
 
 input MessageInput {
-  sender: ID!
-  receiver: Int!
+  sender_id: ID!
+  receiver_id: Int!
   content: String!
 }
 type MessageResponse {
   id: Int!
-  sender: Int!
-  receiver: Int!
+  sender_id: Int!
+  receiver_id: Int!
   content: String!
   createdAt: String!
+}
+
+type MessageSub {
+  receiver: Int!
 }
 
 type Query {
@@ -62,5 +66,5 @@ type Mutation {
 }
 
 type Subscription {
-  currentTime: Time!
+  newMessage(receiver_id: Int!): MessageResponse
 }

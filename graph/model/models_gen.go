@@ -35,17 +35,21 @@ type LoginResponse struct {
 }
 
 type MessageInput struct {
-	Sender   string `json:"sender"`
-	Receiver int32  `json:"receiver"`
-	Content  string `json:"content"`
+	SenderID   string `json:"sender_id"`
+	ReceiverID int32  `json:"receiver_id"`
+	Content    string `json:"content"`
 }
 
 type MessageResponse struct {
-	ID        int32  `json:"id"`
-	Sender    int32  `json:"sender"`
-	Receiver  int32  `json:"receiver"`
-	Content   string `json:"content"`
-	CreatedAt string `json:"createdAt"`
+	ID         int32  `json:"id"`
+	SenderID   int32  `json:"sender_id"`
+	ReceiverID int32  `json:"receiver_id"`
+	Content    string `json:"content"`
+	CreatedAt  string `json:"createdAt"`
+}
+
+type MessageSub struct {
+	Receiver int32 `json:"receiver"`
 }
 
 type Mutation struct {

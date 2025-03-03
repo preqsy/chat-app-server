@@ -69,11 +69,15 @@ type ComplexityRoot struct {
 	}
 
 	MessageResponse struct {
-		Content   func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Receiver  func(childComplexity int) int
-		Sender    func(childComplexity int) int
+		Content    func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		ReceiverID func(childComplexity int) int
+		SenderID   func(childComplexity int) int
+	}
+
+	MessageSub struct {
+		Receiver func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -87,7 +91,7 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		CurrentTime func(childComplexity int) int
+		NewMessage func(childComplexity int, receiverID int32) int
 	}
 
 	Time struct {
@@ -109,7 +113,7 @@ type QueryResolver interface {
 	GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error)
 }
 type SubscriptionResolver interface {
-	CurrentTime(ctx context.Context) (<-chan *model.Time, error)
+	NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error)
 }
 
 type executableSchema struct {
@@ -222,19 +226,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MessageResponse.ID(childComplexity), true
 
-	case "MessageResponse.receiver":
-		if e.complexity.MessageResponse.Receiver == nil {
+	case "MessageResponse.receiver_id":
+		if e.complexity.MessageResponse.ReceiverID == nil {
 			break
 		}
 
-		return e.complexity.MessageResponse.Receiver(childComplexity), true
+		return e.complexity.MessageResponse.ReceiverID(childComplexity), true
 
-	case "MessageResponse.sender":
-		if e.complexity.MessageResponse.Sender == nil {
+	case "MessageResponse.sender_id":
+		if e.complexity.MessageResponse.SenderID == nil {
 			break
 		}
 
-		return e.complexity.MessageResponse.Sender(childComplexity), true
+		return e.complexity.MessageResponse.SenderID(childComplexity), true
+
+	case "MessageSub.receiver":
+		if e.complexity.MessageSub.Receiver == nil {
+			break
+		}
+
+		return e.complexity.MessageSub.Receiver(childComplexity), true
 
 	case "Mutation.createAuthUser":
 		if e.complexity.Mutation.CreateAuthUser == nil {
@@ -284,12 +295,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetCurrentUser(childComplexity, args["token"].(string)), true
 
-	case "Subscription.currentTime":
-		if e.complexity.Subscription.CurrentTime == nil {
+	case "Subscription.newMessage":
+		if e.complexity.Subscription.NewMessage == nil {
 			break
 		}
 
-		return e.complexity.Subscription.CurrentTime(childComplexity), true
+		args, err := ec.field_Subscription_newMessage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.NewMessage(childComplexity, args["receiver_id"].(int32)), true
 
 	case "Time.timeStamp":
 		if e.complexity.Time.TimeStamp == nil {
@@ -568,6 +584,29 @@ func (ec *executionContext) field_Query_getCurrentUser_argsToken(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Subscription_newMessage_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Subscription_newMessage_argsReceiverID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["receiver_id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Subscription_newMessage_argsReceiverID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("receiver_id"))
+	if tmp, ok := rawArgs["receiver_id"]; ok {
+		return ec.unmarshalNInt2int32(ctx, tmp)
+	}
+
+	var zeroVal int32
 	return zeroVal, nil
 }
 
@@ -1171,8 +1210,8 @@ func (ec *executionContext) fieldContext_MessageResponse_id(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageResponse_sender(ctx context.Context, field graphql.CollectedField, obj *model.MessageResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageResponse_sender(ctx, field)
+func (ec *executionContext) _MessageResponse_sender_id(ctx context.Context, field graphql.CollectedField, obj *model.MessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageResponse_sender_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1185,7 +1224,7 @@ func (ec *executionContext) _MessageResponse_sender(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Sender, nil
+		return obj.SenderID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1202,7 +1241,7 @@ func (ec *executionContext) _MessageResponse_sender(ctx context.Context, field g
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MessageResponse_sender(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MessageResponse_sender_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MessageResponse",
 		Field:      field,
@@ -1215,8 +1254,8 @@ func (ec *executionContext) fieldContext_MessageResponse_sender(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageResponse_receiver(ctx context.Context, field graphql.CollectedField, obj *model.MessageResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageResponse_receiver(ctx, field)
+func (ec *executionContext) _MessageResponse_receiver_id(ctx context.Context, field graphql.CollectedField, obj *model.MessageResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageResponse_receiver_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1229,7 +1268,7 @@ func (ec *executionContext) _MessageResponse_receiver(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Receiver, nil
+		return obj.ReceiverID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1246,7 +1285,7 @@ func (ec *executionContext) _MessageResponse_receiver(ctx context.Context, field
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MessageResponse_receiver(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MessageResponse_receiver_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MessageResponse",
 		Field:      field,
@@ -1342,6 +1381,50 @@ func (ec *executionContext) fieldContext_MessageResponse_createdAt(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MessageSub_receiver(ctx context.Context, field graphql.CollectedField, obj *model.MessageSub) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageSub_receiver(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Receiver, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt2int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MessageSub_receiver(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MessageSub",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1508,10 +1591,10 @@ func (ec *executionContext) fieldContext_Mutation_sendMessage(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_MessageResponse_id(ctx, field)
-			case "sender":
-				return ec.fieldContext_MessageResponse_sender(ctx, field)
-			case "receiver":
-				return ec.fieldContext_MessageResponse_receiver(ctx, field)
+			case "sender_id":
+				return ec.fieldContext_MessageResponse_sender_id(ctx, field)
+			case "receiver_id":
+				return ec.fieldContext_MessageResponse_receiver_id(ctx, field)
 			case "content":
 				return ec.fieldContext_MessageResponse_content(ctx, field)
 			case "createdAt":
@@ -1733,8 +1816,8 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Subscription_currentTime(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
-	fc, err := ec.fieldContext_Subscription_currentTime(ctx, field)
+func (ec *executionContext) _Subscription_newMessage(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_newMessage(ctx, field)
 	if err != nil {
 		return nil
 	}
@@ -1747,21 +1830,18 @@ func (ec *executionContext) _Subscription_currentTime(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().CurrentTime(rctx)
+		return ec.resolvers.Subscription().NewMessage(rctx, fc.Args["receiver_id"].(int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return nil
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return nil
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model.Time):
+		case res, ok := <-resTmp.(<-chan *model.MessageResponse):
 			if !ok {
 				return nil
 			}
@@ -1769,7 +1849,7 @@ func (ec *executionContext) _Subscription_currentTime(ctx context.Context, field
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNTime2ᚖchat_app_serverᚋgraphᚋmodelᚐTime(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalOMessageResponse2ᚖchat_app_serverᚋgraphᚋmodelᚐMessageResponse(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -1778,7 +1858,7 @@ func (ec *executionContext) _Subscription_currentTime(ctx context.Context, field
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_currentTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_newMessage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -1786,13 +1866,30 @@ func (ec *executionContext) fieldContext_Subscription_currentTime(_ context.Cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "unixTime":
-				return ec.fieldContext_Time_unixTime(ctx, field)
-			case "timeStamp":
-				return ec.fieldContext_Time_timeStamp(ctx, field)
+			case "id":
+				return ec.fieldContext_MessageResponse_id(ctx, field)
+			case "sender_id":
+				return ec.fieldContext_MessageResponse_sender_id(ctx, field)
+			case "receiver_id":
+				return ec.fieldContext_MessageResponse_receiver_id(ctx, field)
+			case "content":
+				return ec.fieldContext_MessageResponse_content(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MessageResponse_createdAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Time", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type MessageResponse", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_newMessage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3976,27 +4073,27 @@ func (ec *executionContext) unmarshalInputMessageInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"sender", "receiver", "content"}
+	fieldsInOrder := [...]string{"sender_id", "receiver_id", "content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "sender":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sender"))
+		case "sender_id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sender_id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Sender = data
-		case "receiver":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("receiver"))
+			it.SenderID = data
+		case "receiver_id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("receiver_id"))
 			data, err := ec.unmarshalNInt2int32(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Receiver = data
+			it.ReceiverID = data
 		case "content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -4186,13 +4283,13 @@ func (ec *executionContext) _MessageResponse(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "sender":
-			out.Values[i] = ec._MessageResponse_sender(ctx, field, obj)
+		case "sender_id":
+			out.Values[i] = ec._MessageResponse_sender_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "receiver":
-			out.Values[i] = ec._MessageResponse_receiver(ctx, field, obj)
+		case "receiver_id":
+			out.Values[i] = ec._MessageResponse_receiver_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4203,6 +4300,45 @@ func (ec *executionContext) _MessageResponse(ctx context.Context, sel ast.Select
 			}
 		case "createdAt":
 			out.Values[i] = ec._MessageResponse_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var messageSubImplementors = []string{"MessageSub"}
+
+func (ec *executionContext) _MessageSub(ctx context.Context, sel ast.SelectionSet, obj *model.MessageSub) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messageSubImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessageSub")
+		case "receiver":
+			out.Values[i] = ec._MessageSub_receiver(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4374,8 +4510,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
-	case "currentTime":
-		return ec._Subscription_currentTime(ctx, fields[0])
+	case "newMessage":
+		return ec._Subscription_newMessage(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -4926,20 +5062,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTime2chat_app_serverᚋgraphᚋmodelᚐTime(ctx context.Context, sel ast.SelectionSet, v model.Time) graphql.Marshaler {
-	return ec._Time(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNTime2ᚖchat_app_serverᚋgraphᚋmodelᚐTime(ctx context.Context, sel ast.SelectionSet, v *model.Time) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Time(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -5224,6 +5346,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOMessageResponse2ᚖchat_app_serverᚋgraphᚋmodelᚐMessageResponse(ctx context.Context, sel ast.SelectionSet, v *model.MessageResponse) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MessageResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

@@ -67,17 +67,19 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	}
 	newMessage := models.Message{
 		SenderID:   user.ID,
-		ReceiverID: uint(input.Receiver),
+		ReceiverID: uint(input.ReceiverID),
 		Content:    input.Content,
 	}
+	fmt.Println("This is the first message", newMessage)
+
 	msgJson, err := json.Marshal(newMessage)
 	if err != nil {
 		return nil, err
 	}
-	receiverIdString := strconv.Itoa(int(input.Receiver))
+
+	receiverIdString := strconv.Itoa(int(input.ReceiverID))
 	channel := "chat:" + receiverIdString
 	fmt.Println("This is the channel", channel)
-	fmt.Println("This is the message", string(msgJson))
 	err = r.redis_service.PublishMessage(channel, string(msgJson))
 
 	if err != nil {
@@ -86,17 +88,15 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 
 	message, err := r.service.SaveMessage(ctx, &newMessage)
 
-	fmt.Println("This is the saved message", message)
-
 	if err != nil {
 		return nil, err
 	}
 	messageResponse := &model.MessageResponse{
-		Content:   message.Content,
-		Sender:    int32(message.SenderID),
-		Receiver:  int32(message.ReceiverID),
-		CreatedAt: message.CreatedAt.String(),
-		ID:        int32(message.ID),
+		Content:    message.Content,
+		SenderID:   int32(message.SenderID),
+		ReceiverID: int32(message.ReceiverID),
+		CreatedAt:  message.CreatedAt.String(),
+		ID:         int32(message.ID),
 	}
 	return messageResponse, nil
 }
@@ -118,37 +118,30 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 	}, nil
 }
 
-// CurrentTime is the resolver for the currentTime field.
-func (r *subscriptionResolver) CurrentTime(ctx context.Context) (<-chan *model.Time, error) {
-	ch := make(chan *model.Time)
+// NewMessage is the resolver for the newMessage field.
+func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
+	msgChan := make(chan *model.MessageResponse, 1)
+	channel := "chat:" + strconv.Itoa(int(receiverID))
 
+	pubSub := r.redis_service.SubscribeToChannel(channel)
 	go func() {
-		defer close(ch)
+		defer pubSub.Close()
+		for msg := range pubSub.Channel() {
 
-		count := 1
-		for {
-			time.Sleep(1)
-			count = count + 1
-			fmt.Println("Tick", count)
-
-			currentTime := time.Now()
-
-			t := &model.Time{
-				UnixTime:  int32(currentTime.Unix()),
-				TimeStamp: currentTime.Format(time.RFC3339),
+			var message model.MessageResponse
+			err := json.Unmarshal([]byte(msg.Payload), &message)
+			fmt.Println("Subsscription Message", message)
+			if err == nil {
+				msgChan <- &message
 			}
-
-			select {
-			case <-ctx.Done():
-				fmt.Println("Subscription Closed at", count)
-				return
-			case ch <- t:
-
-			}
-
 		}
 	}()
-	return ch, nil
+	go func() {
+		<-ctx.Done()
+		pubSub.Close()
+		close(msgChan)
+	}()
+	return msgChan, nil
 }
 
 // Mutation returns MutationResolver implementation.
