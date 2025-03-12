@@ -5,6 +5,7 @@ import (
 	"chat_app_server/core"
 	database "chat_app_server/database/crud"
 	"chat_app_server/external"
+
 	"chat_app_server/graph"
 	"chat_app_server/jwt_utils"
 	"chat_app_server/middleware"
@@ -20,7 +21,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/websocket"
 
-	// "github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/sirupsen/logrus"
 
 	// "github.com/redis/go-redis/v9"
@@ -30,9 +30,10 @@ import (
 const defaultPort = "8080"
 
 func main() {
-	secret := config.GetSecrets()
+	secrets := config.GetSecrets()
+	var logger logrus.Logger
 
-	datastore, err := database.ConnectDB(secret.Host, secret.Db_User, secret.Password, secret.DbName, secret.Port)
+	datastore, err := database.ConnectDB(secrets.Host, secrets.Db_User, secrets.Password, secrets.DbName, secrets.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,14 +42,16 @@ func main() {
 	jwtService := jwt_utils.InitDB(datastore)
 	ctx := context.Background()
 
-	redisService, err := external.InitRedis(ctx)
+	redisService, err := external.InitRedis(ctx, &logger)
 	if err != nil {
 		logrus.Error("Redis connection failed:", err)
 	}
-	_, err = external.InitNEO4J(ctx, &logrus.Logger{})
+	neo4jService, err := external.InitNEO4J(ctx, &logger, secrets)
 	if err != nil {
 		logrus.Error("NEO4J connection failed", err)
 	}
+	defer neo4jService.CloseNEO4J(ctx)
+
 	resolver := graph.NewResolver(coreService, jwtService, redisService)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
