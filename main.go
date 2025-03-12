@@ -11,7 +11,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -20,6 +19,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/websocket"
+
+	// "github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/sirupsen/logrus"
 
 	// "github.com/redis/go-redis/v9"
@@ -42,7 +43,11 @@ func main() {
 
 	redisService, err := external.InitRedis(ctx)
 	if err != nil {
-		logrus.Fatal("Redis connection failed: %v", err)
+		logrus.Error("Redis connection failed:", err)
+	}
+	_, err = external.InitNEO4J(ctx, &logrus.Logger{})
+	if err != nil {
+		logrus.Error("NEO4J connection failed", err)
 	}
 	resolver := graph.NewResolver(coreService, jwtService, redisService)
 
@@ -52,11 +57,14 @@ func main() {
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
-				origin := r.Header.Get("Origin")
-				if origin == "" || origin == r.Header.Get("Host") {
-					return true
-				}
-				return slices.Contains([]string{":5172", "http://localhost:5172"}, origin)
+				return true
+				// origin := r.Header.Get("Origin")
+				// if origin == "" || origin == r.Header.Get("Host") {
+				// 	return true
+				// }
+				// log.Printf("WebSocket connection attempt from origin: %s", origin)
+
+				// return slices.Contains([]string{":5173", "http://localhost:5173"}, origin)
 
 			},
 		},
