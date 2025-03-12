@@ -34,10 +34,36 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
+type MessageInput struct {
+	SenderID   string `json:"sender_id"`
+	ReceiverID int32  `json:"receiver_id"`
+	Content    string `json:"content"`
+}
+
+type MessageResponse struct {
+	ID         int32  `json:"id"`
+	SenderID   int32  `json:"sender_id"`
+	ReceiverID int32  `json:"receiver_id"`
+	Content    string `json:"content"`
+	CreatedAt  string `json:"createdAt"`
+}
+
+type MessageSub struct {
+	Receiver int32 `json:"receiver"`
+}
+
 type Mutation struct {
 }
 
 type Query struct {
+}
+
+type Subscription struct {
+}
+
+type Time struct {
+	UnixTime  int32  `json:"unixTime"`
+	TimeStamp string `json:"timeStamp"`
 }
 
 type UserEmail struct {

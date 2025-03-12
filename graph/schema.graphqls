@@ -33,13 +33,38 @@ type LoginResponse {
 type UserEmail {
   email: String!
 }
+type Time {
+  unixTime: Int!
+  timeStamp: String!
+}
+
+input MessageInput {
+  sender_id: ID!
+  receiver_id: Int!
+  content: String!
+}
+type MessageResponse {
+  id: Int!
+  sender_id: Int!
+  receiver_id: Int!
+  content: String!
+  createdAt: String!
+}
+
+type MessageSub {
+  receiver: Int!
+}
 
 type Query {
-  placeholder: String
   getCurrentUser(token: String!): AuthUser
 }
 
 type Mutation {
   createAuthUser(input: AuthUserCreate!): AuthUserResponse!
   loginAuthUser(input: AuthUserLogin!): LoginResponse!
+  sendMessage(input: MessageInput!): MessageResponse!
+}
+
+type Subscription {
+  newMessage(receiver_id: Int!): MessageResponse
 }

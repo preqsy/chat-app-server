@@ -8,7 +8,10 @@ import (
 	"chat_app_server/graph/model"
 	models "chat_app_server/model"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -21,7 +24,7 @@ func (r *mutationResolver) CreateAuthUser(ctx context.Context, input model.AuthU
 		LastName:  input.LastName,
 		Username:  input.Username,
 	}
-	savedUser, err := r.service.SaveUser(&newUser)
+	savedUser, err := r.service.SaveUser(ctx, &newUser)
 	if err != nil {
 		return nil, err
 	}
@@ -43,20 +46,64 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 		Email:    input.Email,
 		Password: input.Password,
 	}
-	token, err := r.service.LoginUser(&user)
+	token, err := r.service.LoginUser(ctx, &user)
 	if err != nil {
 		return nil, err
 	}
 	return &model.LoginResponse{Token: token}, nil
 }
 
-// Placeholder is the resolver for the placeholder field.
-func (r *queryResolver) Placeholder(ctx context.Context) (*string, error) {
-	panic(fmt.Errorf("not implemented: Placeholder - placeholder"))
-}
-func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
+// SendMessage is the resolver for the sendMessage field.
+func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error) {
+	request, ok := ctx.Value("request").(*http.Request)
+	if !ok {
+		return nil, fmt.Errorf("request not found")
+	}
+	token := request.Header.Get("authorization")
 
-	user, err := r.jwt_utils.GetCurrentAuthUser(token)
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	newMessage := models.Message{
+		SenderID:   user.ID,
+		ReceiverID: uint(input.ReceiverID),
+		Content:    input.Content,
+	}
+	fmt.Println("This is the first message", newMessage)
+
+	msgJson, err := json.Marshal(newMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	receiverIdString := strconv.Itoa(int(input.ReceiverID))
+	channel := "chat:" + receiverIdString
+	fmt.Println("This is the channel", channel)
+	err = r.redis_service.PublishMessage(channel, string(msgJson))
+
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := r.service.SaveMessage(ctx, &newMessage)
+
+	if err != nil {
+		return nil, err
+	}
+	messageResponse := &model.MessageResponse{
+		Content:    message.Content,
+		SenderID:   int32(message.SenderID),
+		ReceiverID: int32(message.ReceiverID),
+		CreatedAt:  message.CreatedAt.String(),
+		ID:         int32(message.ID),
+	}
+	return messageResponse, nil
+}
+
+// GetCurrentUser is the resolver for the getCurrentUser field.
+func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +118,41 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 	}, nil
 }
 
+// NewMessage is the resolver for the newMessage field.
+func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
+	msgChan := make(chan *model.MessageResponse, 1)
+	channel := "chat:" + strconv.Itoa(int(receiverID))
+
+	pubSub := r.redis_service.SubscribeToChannel(channel)
+	go func() {
+		defer pubSub.Close()
+		for msg := range pubSub.Channel() {
+
+			var message model.MessageResponse
+			err := json.Unmarshal([]byte(msg.Payload), &message)
+			fmt.Println("Subsscription Message", message)
+			if err == nil {
+				msgChan <- &message
+			}
+		}
+	}()
+	go func() {
+		<-ctx.Done()
+		pubSub.Close()
+		close(msgChan)
+	}()
+	return msgChan, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

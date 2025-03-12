@@ -2,19 +2,28 @@ package main
 
 import (
 	"chat_app_server/config"
-	auth "chat_app_server/core"
-	database "chat_app_server/database/postgres"
+	"chat_app_server/core"
+	database "chat_app_server/database/crud"
+	"chat_app_server/external"
 	"chat_app_server/graph"
 	"chat_app_server/jwt_utils"
 	"chat_app_server/middleware"
+	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gorilla/websocket"
+
+	// "github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/sirupsen/logrus"
+
+	// "github.com/redis/go-redis/v9"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -28,12 +37,38 @@ func main() {
 		log.Fatal(err)
 	}
 
-	coreService := auth.CoreService(datastore)
+	coreService := core.CoreService(datastore)
 	jwtService := jwt_utils.InitDB(datastore)
-	resolver := graph.NewResolver(coreService, jwtService)
+	ctx := context.Background()
+
+	redisService, err := external.InitRedis(ctx)
+	if err != nil {
+		logrus.Error("Redis connection failed:", err)
+	}
+	_, err = external.InitNEO4J(ctx, &logrus.Logger{})
+	if err != nil {
+		logrus.Error("NEO4J connection failed", err)
+	}
+	resolver := graph.NewResolver(coreService, jwtService, redisService)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+				// origin := r.Header.Get("Origin")
+				// if origin == "" || origin == r.Header.Get("Host") {
+				// 	return true
+				// }
+				// log.Printf("WebSocket connection attempt from origin: %s", origin)
+
+				// return slices.Contains([]string{":5173", "http://localhost:5173"}, origin)
+
+			},
+		},
+	})
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})

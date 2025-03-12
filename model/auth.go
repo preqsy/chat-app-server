@@ -13,7 +13,7 @@ type AuthUser struct {
 	Password  string `json:"password" gorm:"not null"`
 	FirstName string `json:"firstName" gorm:"not null"`
 	LastName  string `json:"lastName" gorm:"not null"`
-	Username  string `json:"username" gorm:"not null: unique"`
+	Username  string `json:"username" gorm:"unique:not null"`
 }
 
 type AuthUserRegisterResponse struct {
