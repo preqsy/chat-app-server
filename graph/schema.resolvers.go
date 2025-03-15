@@ -102,7 +102,6 @@ func (r *mutationResolver) SendFriendRequest(ctx context.Context, receiverID int
 		return nil, err
 	}
 	r.neo4jService.CreateUser(ctx, authUser)
-	fmt.Println("This is the authUser", authUser)
 	return &model.AuthUser{Email: authUser.Email}, nil
 }
 
