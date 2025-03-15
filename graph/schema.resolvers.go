@@ -126,7 +126,7 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
 	msgChan := make(chan *model.MessageResponse, 1)
 	channel := "chat:" + strconv.Itoa(int(receiverID))
-
+	r.logger.Info("Subscribing to channel: ", channel)
 	pubSub := r.redis_service.SubscribeToChannel(channel)
 	go func() {
 		defer pubSub.Close()
@@ -134,7 +134,7 @@ func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32)
 
 			var message model.MessageResponse
 			err := json.Unmarshal([]byte(msg.Payload), &message)
-			fmt.Println("Subsscription Message", message)
+			fmt.Println("Subscription Message", message)
 			if err == nil {
 				msgChan <- &message
 			}
@@ -142,7 +142,9 @@ func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32)
 	}()
 	go func() {
 		<-ctx.Done()
+		r.logger.Info("Context done, closing channel: ", channel)
 		pubSub.Close()
+
 		close(msgChan)
 	}()
 	return msgChan, nil
