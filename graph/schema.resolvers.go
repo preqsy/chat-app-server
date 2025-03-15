@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -55,13 +54,8 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 
 // SendMessage is the resolver for the sendMessage field.
 func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error) {
-	request, ok := ctx.Value("request").(*http.Request)
-	if !ok {
-		return nil, fmt.Errorf("request not found")
-	}
-	token := request.Header.Get("authorization")
 
-	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +95,20 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	return messageResponse, nil
 }
 
+// SendFriendRequest is the resolver for the sendFriendRequest field.
+func (r *mutationResolver) SendFriendRequest(ctx context.Context, receiverID int32) (*model.AuthUser, error) {
+	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	r.neo4jService.CreateUser(ctx, authUser)
+	fmt.Println("This is the authUser", authUser)
+	return &model.AuthUser{Email: authUser.Email}, nil
+}
+
 // GetCurrentUser is the resolver for the getCurrentUser field.
 func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
-	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx)
 	if err != nil {
 		return nil, err
 	}

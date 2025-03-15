@@ -52,7 +52,7 @@ func main() {
 	}
 	defer neo4jService.CloseNEO4J(ctx)
 	// neo4jService.CreateUser(ctx)
-	resolver := graph.NewResolver(coreService, jwtService, redisService)
+	resolver := graph.NewResolver(coreService, jwtService, redisService, neo4jService)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 

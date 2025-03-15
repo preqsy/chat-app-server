@@ -65,21 +65,24 @@ func StructToMap(data any) (map[string]any, error) {
 	}
 	var result map[string]any
 	err = json.Unmarshal(jsonData, &result)
+	// fmt.Println("Converted map: ", result)
 	return result, err
 }
 
-func (n *NEO4JService) CreateUser(ctx context.Context, payload models.UserNode) {
+func (n *NEO4JService) CreateUser(ctx context.Context, payload *models.AuthUser) {
 	if n.driver == nil {
 		n.logger.Error("Neo4j driver is nil")
 		return
 	}
-	resultMap, err := StructToMap(payload)
+	resultMap, err := StructToMap(&payload)
 	if err != nil {
 		n.logger.Error("Error converting struct to map")
 		return
 	}
+	delete(resultMap, "password")
+
 	result, err := neo4j.ExecuteQuery(
-		ctx, n.driver, "CREATE (p:Person {username: $username, user_id: $user_id, firstName: $firstName, lastName: $lastName, email: $email}) RETURN p", resultMap, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase("neo4j"),
+		ctx, n.driver, "CREATE (p:Person {name: $username, user_id: $ID, firstName: $firstName, lastName: $lastName, email: $email}) RETURN p", resultMap, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase("neo4j"),
 	)
 	if err != nil {
 		n.logger.Errorf("Error creating user: %v", err)

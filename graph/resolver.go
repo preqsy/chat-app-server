@@ -13,12 +13,14 @@ type Resolver struct {
 	service       *auth.Service
 	jwt_utils     *jwt_utils.JWTUtils
 	redis_service *external.RedisService
+	neo4jService  *external.NEO4JService
 }
 
-func NewResolver(service *auth.Service, jwt_utils *jwt_utils.JWTUtils, redis_service *external.RedisService) *Resolver {
+func NewResolver(service *auth.Service, jwt_utils *jwt_utils.JWTUtils, redis_service *external.RedisService, neo4jService *external.NEO4JService) *Resolver {
 	return &Resolver{
 		service:       service,
 		jwt_utils:     jwt_utils,
 		redis_service: redis_service,
+		neo4jService:  neo4jService,
 	}
 }

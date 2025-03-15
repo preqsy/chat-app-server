@@ -6,6 +6,7 @@ import (
 	models "chat_app_server/model"
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -60,7 +61,12 @@ func VerifyAccessToken(tokenString string) (uint, error) {
 	return uint(userID), nil
 }
 
-func (j *JWTUtils) GetCurrentAuthUser(ctx context.Context, token string) (*models.AuthUser, error) {
+func (j *JWTUtils) GetCurrentAuthUser(ctx context.Context) (*models.AuthUser, error) {
+	request, ok := ctx.Value("request").(*http.Request)
+	if !ok {
+		return nil, fmt.Errorf("request not found")
+	}
+	token := request.Header.Get("authorization")
 	userId, err := VerifyAccessToken(token)
 	if err != nil {
 		return nil, err
