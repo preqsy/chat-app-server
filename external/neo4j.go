@@ -2,8 +2,11 @@ package external
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"chat_app_server/config"
+	models "chat_app_server/model"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/sirupsen/logrus"
@@ -52,4 +55,36 @@ func (n *NEO4JService) CloseNEO4J(ctx context.Context) error {
 		n.logger.Info("Neo4j connection closed successfully")
 	}
 	return nil
+}
+
+func StructToMap(data any) (map[string]any, error) {
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]any
+	err = json.Unmarshal(jsonData, &result)
+	return result, err
+}
+
+func (n *NEO4JService) CreateUser(ctx context.Context, payload models.UserNode) {
+	if n.driver == nil {
+		n.logger.Error("Neo4j driver is nil")
+		return
+	}
+	resultMap, err := StructToMap(payload)
+	if err != nil {
+		n.logger.Error("Error converting struct to map")
+		return
+	}
+	result, err := neo4j.ExecuteQuery(
+		ctx, n.driver, "CREATE (p:Person {username: $username, user_id: $user_id, firstName: $firstName, lastName: $lastName, email: $email}) RETURN p", resultMap, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase("neo4j"),
+	)
+	if err != nil {
+		n.logger.Errorf("Error creating user: %v", err)
+	}
+	fmt.Println(result.Summary)
+	n.logger.Info("User created successfully")
+
 }

@@ -51,7 +51,7 @@ func main() {
 		logrus.Error("NEO4J connection failed", err)
 	}
 	defer neo4jService.CloseNEO4J(ctx)
-
+	// neo4jService.CreateUser(ctx)
 	resolver := graph.NewResolver(coreService, jwtService, redisService)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
