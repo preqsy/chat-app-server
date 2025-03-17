@@ -99,8 +99,8 @@ func (n *NEO4JService) SendFriendRequest(ctx context.Context, sender, receiver *
 	}
 	result, err := neo4j.ExecuteQuery(
 		ctx, n.driver,
-		`MERGE (sender:User {userId:$senderId}),
-		MERGE (receiver:User {userId:$receiverId}),
+		`MERGE (sender:User {userId:$senderId})
+		MERGE (receiver:User {userId:$receiverId})
 		MERGE (sender)-[:FRIEND_REQUEST] -> (receiver)`,
 		map[string]any{"senderId": sender.ID, "receiverId": receiver.ID},
 		neo4j.EagerResultTransformer,

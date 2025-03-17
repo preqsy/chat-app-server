@@ -101,8 +101,11 @@ func (r *mutationResolver) SendFriendRequest(ctx context.Context, receiverID int
 	if err != nil {
 		return nil, err
 	}
-	r.neo4jService.CreateUser(ctx, authUser)
-	return &model.AuthUser{Email: authUser.Email}, nil
+	response, err := r.service.SendFriendRequest(ctx, authUser, uint(receiverID))
+	if err != nil {
+		return nil, fmt.Errorf("Error sending friend request: %v", err)
+	}
+	return &model.AuthUser{Email: response.Email}, nil
 }
 
 // GetCurrentUser is the resolver for the getCurrentUser field.

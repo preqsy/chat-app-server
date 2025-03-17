@@ -50,7 +50,7 @@ func main() {
 
 	coreService := core.CoreService(datastore, neo4jService)
 
-	resolver := graph.NewResolver(coreService, jwtService, redisService, neo4jService, logger)
+	resolver := graph.NewResolver(coreService, jwtService, redisService, logger)
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
