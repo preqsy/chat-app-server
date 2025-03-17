@@ -82,12 +82,36 @@ func (n *NEO4JService) CreateUser(ctx context.Context, payload *models.AuthUser)
 	delete(resultMap, "password")
 
 	result, err := neo4j.ExecuteQuery(
-		ctx, n.driver, "CREATE (p:Person {name: $username, user_id: $ID, firstName: $firstName, lastName: $lastName, email: $email}) RETURN p", resultMap, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase("neo4j"),
+		ctx, n.driver, "CREATE (u:User {name: $username, user_id: $ID, firstName: $firstName, lastName: $lastName, email: $email}) RETURN u", resultMap, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase("neo4j"),
 	)
 	if err != nil {
 		n.logger.Errorf("Error creating user: %v", err)
 	}
 	fmt.Println(result.Summary)
 	n.logger.Info("User created successfully")
+
+}
+
+func (n *NEO4JService) SendFriendRequest(ctx context.Context, sender, receiver *models.AuthUser) (*models.AuthUser, error) {
+	if n.driver == nil {
+		n.logger.Error("Neo4j driver is nil")
+		return nil, nil
+	}
+	result, err := neo4j.ExecuteQuery(
+		ctx, n.driver,
+		`MERGE (sender:User {userId:$senderId}),
+		MERGE (receiver:User {userId:$receiverId}),
+		MERGE (sender)-[:FRIEND_REQUEST] -> (receiver)`,
+		map[string]any{"senderId": sender.ID, "receiverId": receiver.ID},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"),
+	)
+	if err != nil {
+		n.logger.Errorf("Error sending friend request: %v", err)
+		return nil, err
+	}
+
+	n.logger.Info("Friend request sent successfully", result.Summary)
+	return receiver, err
 
 }

@@ -35,7 +35,6 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	coreService := core.CoreService(datastore)
 	jwtService := jwt_utils.InitializeJWTUtils(datastore, logger)
 	ctx := context.Background()
 
@@ -48,7 +47,9 @@ func main() {
 		logrus.Error("NEO4J connection failed", err)
 	}
 	defer neo4jService.CloseNEO4J(ctx)
-	// neo4jService.CreateUser(ctx)
+
+	coreService := core.CoreService(datastore, neo4jService)
+
 	resolver := graph.NewResolver(coreService, jwtService, redisService, neo4jService, logger)
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
