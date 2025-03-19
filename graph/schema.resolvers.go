@@ -54,7 +54,6 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 
 // SendMessage is the resolver for the sendMessage field.
 func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error) {
-
 	user, err := r.jwt_utils.GetCurrentAuthUser(ctx)
 	if err != nil {
 		return nil, err
@@ -103,7 +102,20 @@ func (r *mutationResolver) SendFriendRequest(ctx context.Context, receiverID int
 	}
 	response, err := r.service.SendFriendRequest(ctx, authUser, uint(receiverID))
 	if err != nil {
-		return nil, fmt.Errorf("Error sending friend request: %v", err)
+		return nil, fmt.Errorf("error sending friend request: %v", err)
+	}
+	return &model.AuthUser{Email: response.Email}, nil
+}
+
+// AcceptFriendRequest is the resolver for the acceptFriendRequest field.
+func (r *mutationResolver) AcceptFriendRequest(ctx context.Context, senderID int32) (*model.AuthUser, error) {
+	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	response, err := r.service.AcceptFriendRequest(ctx, authUser, uint(senderID))
+	if err != nil {
+		return nil, fmt.Errorf("error accepting friend request: %v", err)
 	}
 	return &model.AuthUser{Email: response.Email}, nil
 }

@@ -123,3 +123,28 @@ func (n *NEO4JService) SendFriendRequest(ctx context.Context, sender, receiver *
 	return receiver, err
 
 }
+
+func (n *NEO4JService) AcceptFriendRequest(ctx context.Context, sender, receiver *models.AuthUser) (*models.AuthUser, error) {
+	if n.driver == nil {
+		n.logger.Error("Neo4j driver is nil")
+		return nil, nil
+	}
+	result, err := neo4j.ExecuteQuery(
+		ctx, n.driver,
+		`
+		MATCH (sender:User {userId: $senderId})-[r:FRIEND_REQUEST]->(receiver:User {userId: $receiverId})
+		DELETE r
+		
+		MERGE (sender)-[:FRIENDS]->(receiver)
+		MERGE (receiver)-[:FRIENDS]->(sender)
+		`, map[string]any{"senderId": sender.ID, "receiverId": receiver.ID},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"),
+	)
+	if err != nil {
+		n.logger.Errorf("Error accepting friend request: %v", err)
+		return nil, err
+	}
+	n.logger.Info("Friend request accepted successfully", result.Summary)
+	return receiver, err
+}

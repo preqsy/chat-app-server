@@ -81,10 +81,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAuthUser    func(childComplexity int, input model.AuthUserCreate) int
-		LoginAuthUser     func(childComplexity int, input model.AuthUserLogin) int
-		SendFriendRequest func(childComplexity int, receiverID int32) int
-		SendMessage       func(childComplexity int, input model.MessageInput) int
+		AcceptFriendRequest func(childComplexity int, senderID int32) int
+		CreateAuthUser      func(childComplexity int, input model.AuthUserCreate) int
+		LoginAuthUser       func(childComplexity int, input model.AuthUserLogin) int
+		SendFriendRequest   func(childComplexity int, receiverID int32) int
+		SendMessage         func(childComplexity int, input model.MessageInput) int
 	}
 
 	Query struct {
@@ -110,6 +111,7 @@ type MutationResolver interface {
 	LoginAuthUser(ctx context.Context, input model.AuthUserLogin) (*model.LoginResponse, error)
 	SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error)
 	SendFriendRequest(ctx context.Context, receiverID int32) (*model.AuthUser, error)
+	AcceptFriendRequest(ctx context.Context, senderID int32) (*model.AuthUser, error)
 }
 type QueryResolver interface {
 	GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error)
@@ -248,6 +250,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MessageSub.Receiver(childComplexity), true
+
+	case "Mutation.acceptFriendRequest":
+		if e.complexity.Mutation.AcceptFriendRequest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_acceptFriendRequest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AcceptFriendRequest(childComplexity, args["sender_id"].(int32)), true
 
 	case "Mutation.createAuthUser":
 		if e.complexity.Mutation.CreateAuthUser == nil {
@@ -485,6 +499,29 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_acceptFriendRequest_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_acceptFriendRequest_argsSenderID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sender_id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_acceptFriendRequest_argsSenderID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sender_id"))
+	if tmp, ok := rawArgs["sender_id"]; ok {
+		return ec.unmarshalNInt2int32(ctx, tmp)
+	}
+
+	var zeroVal int32
+	return zeroVal, nil
+}
 
 func (ec *executionContext) field_Mutation_createAuthUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -1716,6 +1753,74 @@ func (ec *executionContext) fieldContext_Mutation_sendFriendRequest(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_sendFriendRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_acceptFriendRequest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_acceptFriendRequest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AcceptFriendRequest(rctx, fc.Args["sender_id"].(int32))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AuthUser)
+	fc.Result = res
+	return ec.marshalOAuthUser2ᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_acceptFriendRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AuthUser_id(ctx, field)
+			case "username":
+				return ec.fieldContext_AuthUser_username(ctx, field)
+			case "firstName":
+				return ec.fieldContext_AuthUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_AuthUser_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_AuthUser_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AuthUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AuthUser_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_acceptFriendRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4513,6 +4618,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "sendFriendRequest":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_sendFriendRequest(ctx, field)
+			})
+		case "acceptFriendRequest":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_acceptFriendRequest(ctx, field)
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
