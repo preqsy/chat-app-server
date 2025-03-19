@@ -55,8 +55,14 @@ type MessageSub {
   receiver: Int!
 }
 
+input Filters {
+  skip: Int
+  limit: Int
+}
+
 type Query {
   getCurrentUser(token: String!): AuthUser
+  listUsers(filters: Filters): [AuthUser]
 }
 
 type Mutation {

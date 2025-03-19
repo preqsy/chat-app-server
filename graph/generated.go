@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetCurrentUser func(childComplexity int, token string) int
+		ListUsers      func(childComplexity int, filters *model.Filters) int
 	}
 
 	Subscription struct {
@@ -115,6 +116,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error)
+	ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error)
 }
 type SubscriptionResolver interface {
 	NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error)
@@ -323,6 +325,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetCurrentUser(childComplexity, args["token"].(string)), true
 
+	case "Query.listUsers":
+		if e.complexity.Query.ListUsers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_listUsers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ListUsers(childComplexity, args["filters"].(*model.Filters)), true
+
 	case "Subscription.newMessage":
 		if e.complexity.Subscription.NewMessage == nil {
 			break
@@ -366,6 +380,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAuthUserCreate,
 		ec.unmarshalInputAuthUserLogin,
+		ec.unmarshalInputFilters,
 		ec.unmarshalInputMessageInput,
 	)
 	first := true
@@ -658,6 +673,29 @@ func (ec *executionContext) field_Query_getCurrentUser_argsToken(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_listUsers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_listUsers_argsFilters(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filters"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_listUsers_argsFilters(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.Filters, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+	if tmp, ok := rawArgs["filters"]; ok {
+		return ec.unmarshalOFilters2ᚖchat_app_serverᚋgraphᚋmodelᚐFilters(ctx, tmp)
+	}
+
+	var zeroVal *model.Filters
 	return zeroVal, nil
 }
 
@@ -1889,6 +1927,74 @@ func (ec *executionContext) fieldContext_Query_getCurrentUser(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getCurrentUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_listUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_listUsers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ListUsers(rctx, fc.Args["filters"].(*model.Filters))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AuthUser)
+	fc.Result = res
+	return ec.marshalOAuthUser2ᚕᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_listUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AuthUser_id(ctx, field)
+			case "username":
+				return ec.fieldContext_AuthUser_username(ctx, field)
+			case "firstName":
+				return ec.fieldContext_AuthUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_AuthUser_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_AuthUser_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AuthUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AuthUser_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_listUsers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4276,6 +4382,40 @@ func (ec *executionContext) unmarshalInputAuthUserLogin(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputFilters(ctx context.Context, obj any) (model.Filters, error) {
+	var it model.Filters
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"skip", "limit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "skip":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skip"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Skip = data
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Limit = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputMessageInput(ctx context.Context, obj any) (model.MessageInput, error) {
 	var it model.MessageInput
 	asMap := map[string]any{}
@@ -4675,6 +4815,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getCurrentUser(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "listUsers":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_listUsers(ctx, field)
 				return res
 			}
 
@@ -5533,6 +5692,47 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOAuthUser2ᚕᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v []*model.AuthUser) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAuthUser2ᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalOAuthUser2ᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthUser) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -5563,6 +5763,30 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	res := graphql.MarshalBoolean(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOFilters2ᚖchat_app_serverᚋgraphᚋmodelᚐFilters(ctx context.Context, v any) (*model.Filters, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFilters(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt32(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt32(*v)
 	return res
 }
 

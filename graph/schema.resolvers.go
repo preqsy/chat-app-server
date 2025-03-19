@@ -137,6 +137,30 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 	}, nil
 }
 
+// ListUsers is the resolver for the listUsers field.
+func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+
+	skip := filters.Skip
+	limit := filters.Limit
+	users, err := r.service.ListUsers(ctx, *skip, *limit)
+	if err != nil {
+		return nil, err
+	}
+	var response []*model.AuthUser
+	for _, user := range users {
+		response = append(response, &model.AuthUser{
+			Username:  user.Username,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			UpdatedAt: user.UpdatedAt.String(),
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt.String(),
+			ID:        int32(user.ID),
+		})
+	}
+	return response, nil
+}
+
 // NewMessage is the resolver for the newMessage field.
 func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
 	msgChan := make(chan *model.MessageResponse, 1)

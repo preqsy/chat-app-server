@@ -70,3 +70,18 @@ func (s *Service) GetCurrentUser(ctx context.Context, email string) (*models.Aut
 	}
 	return user, nil
 }
+
+func (s *Service) ListUsers(ctx context.Context, skip, limit int32) ([]*models.AuthUser, error) {
+
+	if skip < 0 {
+		skip = 0
+	}
+	if limit < 0 {
+		limit = 10
+	}
+	users, err := s.datastore.ListUsers(ctx, skip, limit)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
