@@ -69,7 +69,7 @@ func StructToMap(data any) (map[string]any, error) {
 	return result, err
 }
 
-func (n *NEO4JService) CreateUser(ctx context.Context, payload *models.AuthUser) {
+func (n *NEO4JService) CreateUserNode(ctx context.Context, payload *models.AuthUser) {
 	if n.driver == nil {
 		n.logger.Error("Neo4j driver is nil")
 		return
@@ -99,10 +99,18 @@ func (n *NEO4JService) SendFriendRequest(ctx context.Context, sender, receiver *
 	}
 	result, err := neo4j.ExecuteQuery(
 		ctx, n.driver,
-		`MERGE (sender:User {userId:$senderId})
-		MERGE (receiver:User {userId:$receiverId})
-		MERGE (sender)-[:FRIEND_REQUEST] -> (receiver)`,
-		map[string]any{"senderId": sender.ID, "receiverId": receiver.ID},
+		`
+		MERGE (sender:User {userId: $senderId})
+		ON CREATE SET sender.name = $senderName
+		ON MATCH SET sender.name = sender.name
+		
+		MERGE (receiver:User {userId: $receiverId})
+		ON CREATE SET receiver.name = $receiverName
+		ON MATCH SET receiver.name = receiver.name
+		
+		MERGE (sender)-[:FRIEND_REQUEST]->(receiver)
+		`,
+		map[string]any{"senderId": sender.ID, "receiverId": receiver.ID, "senderName": sender.Username, "receiverName": receiver.Username},
 		neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase("neo4j"),
 	)
