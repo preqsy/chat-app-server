@@ -63,7 +63,8 @@ input Filters {
 type Query {
   getCurrentUser(token: String!): AuthUser
   listUsers(filters: Filters): [AuthUser]
-  listFriendRequest(filters: Filters): [AuthUser]
+  listFriendRequests(filters: Filters): [AuthUser]
+  listFriends(filters: Filters): [AuthUser]
 }
 
 type Mutation {

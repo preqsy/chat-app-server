@@ -55,3 +55,14 @@ func (s *Service) ListFriendRequests(ctx context.Context, skip, limit int32, use
 	}
 	return users, nil
 }
+func (s *Service) ListFriends(ctx context.Context, skip, limit int32, user *models.AuthUser) ([]*models.AuthUser, error) {
+	result, err := s.neo4jService.ListFriends(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	users, err := s.datastore.ListUsersByIds(ctx, result, skip, limit)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

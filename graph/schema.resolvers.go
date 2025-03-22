@@ -139,7 +139,6 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 
 // ListUsers is the resolver for the listUsers field.
 func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
-
 	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
 	if err != nil {
 		return nil, err
@@ -170,8 +169,8 @@ func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) (
 	return response, nil
 }
 
-// ListFriendRequest is the resolver for the listFriendRequest field.
-func (r *queryResolver) ListFriendRequest(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+// ListFriendRequests is the resolver for the listFriendRequests field.
+func (r *queryResolver) ListFriendRequests(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
 	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
 
 	if filters == nil {
@@ -181,6 +180,35 @@ func (r *queryResolver) ListFriendRequest(ctx context.Context, filters *model.Fi
 		}
 	}
 	result, err := r.service.ListFriendRequests(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		r.logger.Errorln("error listing friends", err)
+		return nil, err
+	}
+	var users []*model.AuthUser
+
+	for _, user := range result {
+		users = append(users, &model.AuthUser{
+			Email:     user.Email,
+			LastName:  user.LastName,
+			FirstName: user.FirstName,
+			Username:  user.Username,
+			ID:        int32(user.ID),
+		})
+	}
+	return users, nil
+}
+
+// ListFriends is the resolver for the listFriends field.
+func (r *queryResolver) ListFriends(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
+
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+	result, err := r.service.ListFriends(ctx, filters.Skip, filters.Limit, authUser)
 	if err != nil {
 		r.logger.Errorln("error listing friends", err)
 		return nil, err
@@ -239,3 +267,39 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) ListFriendRequest(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
+
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+	result, err := r.service.ListFriendRequests(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		r.logger.Errorln("error listing friends", err)
+		return nil, err
+	}
+	var users []*model.AuthUser
+
+	for _, user := range result {
+		users = append(users, &model.AuthUser{
+			Email:     user.Email,
+			LastName:  user.LastName,
+			FirstName: user.FirstName,
+			Username:  user.Username,
+			ID:        int32(user.ID),
+		})
+	}
+	return users, nil
+}
+*/

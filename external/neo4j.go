@@ -217,3 +217,39 @@ func (n *NEO4JService) ListFriendRequests(ctx context.Context, user *models.Auth
 	}
 	return users, nil
 }
+func (n *NEO4JService) ListFriends(ctx context.Context, user *models.AuthUser) ([]int64, error) {
+	if n.driver == nil {
+		n.logger.Errorf("error connecting to driver")
+		return nil, fmt.Errorf("error connecting to neo4j driver")
+	}
+	result, err := neo4j.ExecuteQuery(
+		ctx, n.driver,
+		`
+		MATCH (sender: User)-[:FRIENDS]-> (receiver:User {userId:$userId})
+		RETURN sender.userId
+		`,
+		map[string]any{"userId": user.ID},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"),
+	)
+	if err != nil {
+		n.logger.Errorf("failed to retrieve friends: %v", err)
+		return nil, err
+	}
+
+	if len(result.Records) == 0 {
+		return nil, err
+	}
+
+	var users []int64
+
+	for _, record := range result.Records {
+		value, ok := record.Get("sender.userId")
+		if !ok {
+			return nil, err
+		}
+		userId := value.(int64)
+		users = append(users, userId)
+	}
+	return users, nil
+}
