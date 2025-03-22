@@ -4,20 +4,25 @@ import (
 	"context"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 )
 
 type RedisService struct {
-	rdb *redis.Client
-	ctx context.Context
+	rdb    *redis.Client
+	ctx    context.Context
+	logger *logrus.Logger
 }
 
-func InitRedis(ctx context.Context) (*RedisService, error) {
+func InitRedis(ctx context.Context, logger *logrus.Logger) (*RedisService, error) {
+
+	logger.Info("Connecting to redis.....")
 	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
-	return &RedisService{rdb: rdb, ctx: ctx}, nil
+	logger.Info("Connection with Redis established")
+	return &RedisService{rdb: rdb, ctx: ctx, logger: logger}, nil
 }
 
 func (r *RedisService) PublishMessage(channel, message string) error {

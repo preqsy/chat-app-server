@@ -55,14 +55,24 @@ type MessageSub {
   receiver: Int!
 }
 
+input Filters {
+  skip: Int!
+  limit: Int!
+}
+
 type Query {
   getCurrentUser(token: String!): AuthUser
+  listUsers(filters: Filters): [AuthUser]
+  listFriendRequests(filters: Filters): [AuthUser]
+  listFriends(filters: Filters): [AuthUser]
 }
 
 type Mutation {
   createAuthUser(input: AuthUserCreate!): AuthUserResponse!
   loginAuthUser(input: AuthUserLogin!): LoginResponse!
   sendMessage(input: MessageInput!): MessageResponse!
+  sendFriendRequest(receiver_id: Int!): AuthUser
+  acceptFriendRequest(sender_id: Int!): AuthUser
 }
 
 type Subscription {
