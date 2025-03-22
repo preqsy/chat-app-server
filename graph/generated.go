@@ -89,8 +89,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetCurrentUser func(childComplexity int, token string) int
-		ListUsers      func(childComplexity int, filters *model.Filters) int
+		GetCurrentUser    func(childComplexity int, token string) int
+		ListFriendRequest func(childComplexity int, filters *model.Filters) int
+		ListUsers         func(childComplexity int, filters *model.Filters) int
 	}
 
 	Subscription struct {
@@ -117,6 +118,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error)
 	ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error)
+	ListFriendRequest(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error)
 }
 type SubscriptionResolver interface {
 	NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error)
@@ -324,6 +326,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetCurrentUser(childComplexity, args["token"].(string)), true
+
+	case "Query.listFriendRequest":
+		if e.complexity.Query.ListFriendRequest == nil {
+			break
+		}
+
+		args, err := ec.field_Query_listFriendRequest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ListFriendRequest(childComplexity, args["filters"].(*model.Filters)), true
 
 	case "Query.listUsers":
 		if e.complexity.Query.ListUsers == nil {
@@ -673,6 +687,29 @@ func (ec *executionContext) field_Query_getCurrentUser_argsToken(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_listFriendRequest_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_listFriendRequest_argsFilters(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filters"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_listFriendRequest_argsFilters(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.Filters, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+	if tmp, ok := rawArgs["filters"]; ok {
+		return ec.unmarshalOFilters2ᚖchat_app_serverᚋgraphᚋmodelᚐFilters(ctx, tmp)
+	}
+
+	var zeroVal *model.Filters
 	return zeroVal, nil
 }
 
@@ -1995,6 +2032,74 @@ func (ec *executionContext) fieldContext_Query_listUsers(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_listUsers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_listFriendRequest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_listFriendRequest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ListFriendRequest(rctx, fc.Args["filters"].(*model.Filters))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AuthUser)
+	fc.Result = res
+	return ec.marshalOAuthUser2ᚕᚖchat_app_serverᚋgraphᚋmodelᚐAuthUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_listFriendRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AuthUser_id(ctx, field)
+			case "username":
+				return ec.fieldContext_AuthUser_username(ctx, field)
+			case "firstName":
+				return ec.fieldContext_AuthUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_AuthUser_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_AuthUser_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AuthUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AuthUser_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_listFriendRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4398,14 +4503,14 @@ func (ec *executionContext) unmarshalInputFilters(ctx context.Context, obj any) 
 		switch k {
 		case "skip":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skip"))
-			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			data, err := ec.unmarshalNInt2int32(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Skip = data
 		case "limit":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			data, err := ec.unmarshalNInt2int32(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4834,6 +4939,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_listUsers(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "listFriendRequest":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_listFriendRequest(ctx, field)
 				return res
 			}
 
@@ -5772,22 +5896,6 @@ func (ec *executionContext) unmarshalOFilters2ᚖchat_app_serverᚋgraphᚋmodel
 	}
 	res, err := ec.unmarshalInputFilters(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalInt32(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalInt32(*v)
-	return res
 }
 
 func (ec *executionContext) marshalOMessageResponse2ᚖchat_app_serverᚋgraphᚋmodelᚐMessageResponse(ctx context.Context, sel ast.SelectionSet, v *model.MessageResponse) graphql.Marshaler {

@@ -31,8 +31,8 @@ type AuthUserResponse struct {
 }
 
 type Filters struct {
-	Skip  *int32 `json:"skip,omitempty"`
-	Limit *int32 `json:"limit,omitempty"`
+	Skip  int32 `json:"skip"`
+	Limit int32 `json:"limit"`
 }
 
 type LoginResponse struct {

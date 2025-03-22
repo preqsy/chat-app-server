@@ -140,9 +140,14 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 // ListUsers is the resolver for the listUsers field.
 func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
 
-	skip := filters.Skip
-	limit := filters.Limit
-	users, err := r.service.ListUsers(ctx, *skip, *limit)
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+
+	users, err := r.service.ListUsers(ctx, filters.Skip, filters.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -159,6 +164,35 @@ func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) (
 		})
 	}
 	return response, nil
+}
+
+// ListFriendRequest is the resolver for the listFriendRequest field.
+func (r *queryResolver) ListFriendRequest(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
+
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+	result, err := r.service.ListFriendRequests(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		r.logger.Errorln("error listing friends", err)
+		return nil, err
+	}
+	var users []*model.AuthUser
+
+	for _, user := range result {
+		users = append(users, &model.AuthUser{
+			Email:     user.Email,
+			LastName:  user.LastName,
+			FirstName: user.FirstName,
+			Username:  user.Username,
+			ID:        int32(user.ID),
+		})
+	}
+	return users, nil
 }
 
 // NewMessage is the resolver for the newMessage field.

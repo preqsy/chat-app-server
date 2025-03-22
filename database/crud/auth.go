@@ -46,3 +46,12 @@ func (db *PostgresDB) ListUsers(ctx context.Context, skip, limit int32) ([]*mode
 	}
 	return users, nil
 }
+
+func (db *PostgresDB) ListUsersByIds(ctx context.Context, ids []int64, skip, limit int32) ([]*models.AuthUser, error) {
+	var users []*models.AuthUser
+	result := db.client.Where("id IN (?)", ids).Offset(int(skip)).Limit(int(limit)).Find(&users)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
+}
