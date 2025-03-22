@@ -180,6 +180,38 @@ func (n *NEO4JService) CheckIfFriends(ctx context.Context, sender, receiver *mod
 
 	return isFriends, nil
 }
+func (n *NEO4JService) CheckFriendRequest(ctx context.Context, sender, receiver *models.AuthUser) (bool, error) {
+	if n.driver == nil {
+		n.logger.Error("Neo4j driver is nil")
+		return false, nil
+	}
+
+	result, err := neo4j.ExecuteQuery(
+		ctx, n.driver,
+		`
+		MATCH (sender:User {userId: $senderId})-[r:FRIEND_REQUEST]-(receiver:User {userId: $receiverId})
+		RETURN COUNT(r) AS friendCount
+		
+		`,
+		map[string]any{"senderId": sender.ID, "receiverId": receiver.ID},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"),
+	)
+
+	if err != nil {
+		n.logger.Errorf("error checking friendship: %s", err)
+		return false, err
+	}
+
+	if len(result.Records) == 0 {
+		return false, nil // No friendship found
+	}
+
+	friendCount, _ := result.Records[0].Get("friendCount")
+	isFriends := friendCount.(int64) > 0
+
+	return isFriends, nil
+}
 
 func (n *NEO4JService) ListFriendRequests(ctx context.Context, user *models.AuthUser) ([]int64, error) {
 	if n.driver == nil {
