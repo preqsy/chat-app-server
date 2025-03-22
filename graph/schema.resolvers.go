@@ -150,7 +150,7 @@ func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) (
 		}
 	}
 
-	users, err := r.service.ListUsers(ctx, filters.Skip, filters.Limit, authUser.ID)
+	users, err := r.service.ListUsers(ctx, filters.Skip, filters.Limit, authUser)
 	if err != nil {
 		return nil, err
 	}
