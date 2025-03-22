@@ -48,7 +48,7 @@ func main() {
 	}
 	defer neo4jService.CloseNEO4J(ctx)
 
-	coreService := core.CoreService(datastore, neo4jService)
+	coreService := core.CoreService(datastore, neo4jService, logger)
 
 	resolver := graph.NewResolver(coreService, jwtService, redisService, logger)
 

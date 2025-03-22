@@ -140,6 +140,10 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 // ListUsers is the resolver for the listUsers field.
 func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
 
+	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if filters == nil {
 		filters = &model.Filters{
 			Skip:  0,
@@ -147,7 +151,7 @@ func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) (
 		}
 	}
 
-	users, err := r.service.ListUsers(ctx, filters.Skip, filters.Limit)
+	users, err := r.service.ListUsers(ctx, filters.Skip, filters.Limit, authUser.ID)
 	if err != nil {
 		return nil, err
 	}

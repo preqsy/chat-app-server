@@ -65,7 +65,6 @@ func StructToMap(data any) (map[string]any, error) {
 	}
 	var result map[string]any
 	err = json.Unmarshal(jsonData, &result)
-	// fmt.Println("Converted map: ", result)
 	return result, err
 }
 
@@ -81,13 +80,12 @@ func (n *NEO4JService) CreateUserNode(ctx context.Context, payload *models.AuthU
 	}
 	delete(resultMap, "password")
 
-	result, err := neo4j.ExecuteQuery(
+	_, err = neo4j.ExecuteQuery(
 		ctx, n.driver, "CREATE (u:User {name: $username, user_id: $ID, firstName: $firstName, lastName: $lastName, email: $email}) RETURN u", resultMap, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase("neo4j"),
 	)
 	if err != nil {
 		n.logger.Errorf("Error creating user: %v", err)
 	}
-	fmt.Println(result.Summary)
 	n.logger.Info("User created successfully")
 
 }
@@ -109,6 +107,7 @@ func (n *NEO4JService) SendFriendRequest(ctx context.Context, sender, receiver *
 		ON MATCH SET receiver.name = receiver.name
 		
 		MERGE (sender)-[:FRIEND_REQUEST]->(receiver)
+		
 		`,
 		map[string]any{"senderId": sender.ID, "receiverId": receiver.ID, "senderName": sender.Username, "receiverName": receiver.Username},
 		neo4j.EagerResultTransformer,
@@ -177,7 +176,6 @@ func (n *NEO4JService) CheckIfFriends(ctx context.Context, sender, receiver *mod
 	}
 
 	friendCount, _ := result.Records[0].Get("friendCount")
-	fmt.Println("friend", friendCount)
 	isFriends := friendCount.(int64) > 0
 
 	return isFriends, nil

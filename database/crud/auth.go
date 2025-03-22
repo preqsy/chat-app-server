@@ -38,9 +38,9 @@ func (db *PostgresDB) GetUserById(ctx context.Context, userId uint) (*models.Aut
 	return &user, nil
 }
 
-func (db *PostgresDB) ListUsers(ctx context.Context, skip, limit int32) ([]*models.AuthUser, error) {
+func (db *PostgresDB) ListUsers(ctx context.Context, skip, limit int32, id uint) ([]*models.AuthUser, error) {
 	var users []*models.AuthUser
-	result := db.client.Find(&users).Offset(int(skip)).Limit(int(limit)).Find(&users)
+	result := db.client.Where("id <> ? ", id).Offset(int(skip)).Limit(int(limit)).Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}
