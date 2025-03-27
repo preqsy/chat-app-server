@@ -65,6 +65,7 @@ type Query {
   listUsers(filters: Filters): [AuthUser]
   listFriendRequests(filters: Filters): [AuthUser]
   listFriends(filters: Filters): [AuthUser]
+  retrieveMessages(sender_id: Int!, receiver_id: Int!): [MessageResponse]
 }
 
 type Mutation {
