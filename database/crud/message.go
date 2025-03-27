@@ -17,3 +17,13 @@ func (db *PostgresDB) SaveMessage(ctx context.Context, message *models.Message) 
 	}
 	return message, nil
 }
+
+func (db *PostgresDB) RetrieveMessagesById(ctx context.Context, senderId, receiverId int32) ([]*models.Message, error) {
+	var messages []*models.Message
+	err := db.client.WithContext(ctx).Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", senderId, receiverId, receiverId, senderId).Find(&messages).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
+}

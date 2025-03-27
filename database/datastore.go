@@ -12,4 +12,5 @@ type Datastore interface {
 	SaveMessage(ctx context.Context, message *models.Message) (*models.Message, error)
 	ListUsers(ctx context.Context, skip, limit int32, ids []int64) ([]*models.AuthUser, error)
 	ListUsersByIds(ctx context.Context, ids []int64, skip, limit int32) ([]*models.AuthUser, error)
+	RetrieveMessagesById(ctx context.Context, senderId, receiverId int32) ([]*models.Message, error)
 }
