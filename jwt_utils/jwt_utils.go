@@ -6,6 +6,8 @@ import (
 	models "chat_app_server/model"
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,11 +15,12 @@ import (
 )
 
 type JWTUtils struct {
-	db datastore.Datastore
+	datastore datastore.Datastore
+	logger    *logrus.Logger
 }
 
-func InitDB(database datastore.Datastore) *JWTUtils {
-	return &JWTUtils{db: database}
+func InitializeJWTUtils(datastore datastore.Datastore, logger *logrus.Logger) *JWTUtils {
+	return &JWTUtils{datastore: datastore, logger: logger}
 }
 
 func GenerateAccessToken(userID uint) (string, error) {
@@ -35,7 +38,7 @@ func GenerateAccessToken(userID uint) (string, error) {
 	return tokenString, nil
 }
 
-func VerifyAccessToken(tokenString string) (uint, error) {
+func (j *JWTUtils) VerifyAccessToken(tokenString string) (uint, error) {
 	secret := config.GetSecrets()
 
 	secretKey := []byte(secret.JwtSecret)
@@ -45,27 +48,36 @@ func VerifyAccessToken(tokenString string) (uint, error) {
 	})
 
 	if err != nil {
-		logrus.Error("Invalid Token")
+		j.logger.Error("Invalid Token")
 		return 0, err
 	}
 	userID := token.Claims.(jwt.MapClaims)["user_id"].(float64)
 	if userID == 0 {
-		return 0, fmt.Errorf("Invalid User")
+		j.logger.Errorf("Invalid User")
+		return 0, err
 	}
 
 	if !token.Valid {
-		return 0, fmt.Errorf("invalid token")
+		j.logger.Error("Token Expired")
+		return 0, err
 	}
 
 	return uint(userID), nil
 }
 
-func (j *JWTUtils) GetCurrentAuthUser(ctx context.Context, token string) (*models.AuthUser, error) {
-	userId, err := VerifyAccessToken(token)
+func (j *JWTUtils) GetCurrentAuthUser(ctx context.Context) (*models.AuthUser, error) {
+	request, ok := ctx.Value("request").(*http.Request)
+	if !ok {
+		return nil, fmt.Errorf("request not found")
+	}
+	token := request.Header.Get("authorization")
+	cleanToken := strings.TrimPrefix(token, "Bearer ")
+
+	userId, err := j.VerifyAccessToken(cleanToken)
 	if err != nil {
 		return nil, err
 	}
-	data, err := j.db.GetUserById(ctx, userId)
+	data, err := j.datastore.GetUserById(ctx, userId)
 	if err != nil {
 		return nil, err
 	}

@@ -30,6 +30,11 @@ type AuthUserResponse struct {
 	Token    string    `json:"token"`
 }
 
+type Filters struct {
+	Skip  int32 `json:"skip"`
+	Limit int32 `json:"limit"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
 }

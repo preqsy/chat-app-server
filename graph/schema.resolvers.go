@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -55,42 +54,39 @@ func (r *mutationResolver) LoginAuthUser(ctx context.Context, input model.AuthUs
 
 // SendMessage is the resolver for the sendMessage field.
 func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageInput) (*model.MessageResponse, error) {
-	request, ok := ctx.Value("request").(*http.Request)
-	if !ok {
-		return nil, fmt.Errorf("request not found")
-	}
-	token := request.Header.Get("authorization")
-
-	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	// Create a new message object
 	newMessage := models.Message{
 		SenderID:   user.ID,
 		ReceiverID: uint(input.ReceiverID),
 		Content:    input.Content,
 	}
-	fmt.Println("This is the first message", newMessage)
 
-	msgJson, err := json.Marshal(newMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	receiverIdString := strconv.Itoa(int(input.ReceiverID))
-	channel := "chat:" + receiverIdString
-	fmt.Println("This is the channel", channel)
-	err = r.redis_service.PublishMessage(channel, string(msgJson))
-
-	if err != nil {
-		return nil, err
-	}
-
+	// Save the message first before publishing
 	message, err := r.service.SaveMessage(ctx, &newMessage)
-
 	if err != nil {
 		return nil, err
 	}
+
+	// Convert message to JSON for Redis publishing
+	msgJson, err := json.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+
+	// Publish the saved message to Redis
+	channel := "chat:" + strconv.Itoa(int(input.ReceiverID))
+	err = r.redis_service.PublishMessage(channel, string(msgJson))
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("This is the first messgae", string(msgJson))
+
+	// Create response object
 	messageResponse := &model.MessageResponse{
 		Content:    message.Content,
 		SenderID:   int32(message.SenderID),
@@ -98,12 +94,39 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 		CreatedAt:  message.CreatedAt.String(),
 		ID:         int32(message.ID),
 	}
+
 	return messageResponse, nil
+}
+
+// SendFriendRequest is the resolver for the sendFriendRequest field.
+func (r *mutationResolver) SendFriendRequest(ctx context.Context, receiverID int32) (*model.AuthUser, error) {
+	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	response, err := r.service.SendFriendRequest(ctx, authUser, uint(receiverID))
+	if err != nil {
+		return nil, fmt.Errorf("error sending friend request: %v", err)
+	}
+	return &model.AuthUser{Email: response.Email}, nil
+}
+
+// AcceptFriendRequest is the resolver for the acceptFriendRequest field.
+func (r *mutationResolver) AcceptFriendRequest(ctx context.Context, senderID int32) (*model.AuthUser, error) {
+	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	response, err := r.service.AcceptFriendRequest(ctx, authUser, uint(senderID))
+	if err != nil {
+		return nil, fmt.Errorf("error accepting friend request: %v", err)
+	}
+	return &model.AuthUser{Email: response.Email}, nil
 }
 
 // GetCurrentUser is the resolver for the getCurrentUser field.
 func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*model.AuthUser, error) {
-	user, err := r.jwt_utils.GetCurrentAuthUser(ctx, token)
+	user, err := r.jwt_utils.GetCurrentAuthUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -118,11 +141,101 @@ func (r *queryResolver) GetCurrentUser(ctx context.Context, token string) (*mode
 	}, nil
 }
 
+// ListUsers is the resolver for the listUsers field.
+func (r *queryResolver) ListUsers(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+
+	users, err := r.service.ListUsers(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		return nil, err
+	}
+	var response []*model.AuthUser
+	for _, user := range users {
+		response = append(response, &model.AuthUser{
+			Username:  user.Username,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			UpdatedAt: user.UpdatedAt.String(),
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt.String(),
+			ID:        int32(user.ID),
+		})
+	}
+	return response, nil
+}
+
+// ListFriendRequests is the resolver for the listFriendRequests field.
+func (r *queryResolver) ListFriendRequests(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
+
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+	result, err := r.service.ListFriendRequests(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		r.logger.Errorln("error listing friends", err)
+		return nil, err
+	}
+	var users []*model.AuthUser
+
+	for _, user := range result {
+		users = append(users, &model.AuthUser{
+			Email:     user.Email,
+			LastName:  user.LastName,
+			FirstName: user.FirstName,
+			Username:  user.Username,
+			ID:        int32(user.ID),
+		})
+	}
+	return users, nil
+}
+
+// ListFriends is the resolver for the listFriends field.
+func (r *queryResolver) ListFriends(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
+
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+	result, err := r.service.ListFriends(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		r.logger.Errorln("error listing friends", err)
+		return nil, err
+	}
+	var users []*model.AuthUser
+
+	for _, user := range result {
+		users = append(users, &model.AuthUser{
+			Email:     user.Email,
+			LastName:  user.LastName,
+			FirstName: user.FirstName,
+			Username:  user.Username,
+			ID:        int32(user.ID),
+		})
+	}
+	return users, nil
+}
+
 // NewMessage is the resolver for the newMessage field.
 func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
 	msgChan := make(chan *model.MessageResponse, 1)
 	channel := "chat:" + strconv.Itoa(int(receiverID))
-
+	r.logger.Info("Subscribing to channel: ", channel)
 	pubSub := r.redis_service.SubscribeToChannel(channel)
 	go func() {
 		defer pubSub.Close()
@@ -130,7 +243,7 @@ func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32)
 
 			var message model.MessageResponse
 			err := json.Unmarshal([]byte(msg.Payload), &message)
-			fmt.Println("Subsscription Message", message)
+			fmt.Println("Subscription Message", message)
 			if err == nil {
 				msgChan <- &message
 			}
@@ -138,7 +251,9 @@ func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32)
 	}()
 	go func() {
 		<-ctx.Done()
+		r.logger.Info("Context done, closing channel: ", channel)
 		pubSub.Close()
+
 		close(msgChan)
 	}()
 	return msgChan, nil
@@ -156,3 +271,39 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) ListFriendRequest(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
+	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
+
+	if filters == nil {
+		filters = &model.Filters{
+			Skip:  0,
+			Limit: 20,
+		}
+	}
+	result, err := r.service.ListFriendRequests(ctx, filters.Skip, filters.Limit, authUser)
+	if err != nil {
+		r.logger.Errorln("error listing friends", err)
+		return nil, err
+	}
+	var users []*model.AuthUser
+
+	for _, user := range result {
+		users = append(users, &model.AuthUser{
+			Email:     user.Email,
+			LastName:  user.LastName,
+			FirstName: user.FirstName,
+			Username:  user.Username,
+			ID:        int32(user.ID),
+		})
+	}
+	return users, nil
+}
+*/

@@ -70,3 +70,17 @@ func (s *Service) GetCurrentUser(ctx context.Context, email string) (*models.Aut
 	}
 	return user, nil
 }
+
+func (s *Service) ListUsers(ctx context.Context, skip, limit int32, user *models.AuthUser) ([]*models.AuthUser, error) {
+
+	userIds, err := s.neo4jService.ListFriends(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	userIds = append(userIds, int64(user.ID))
+	users, err := s.datastore.ListUsers(ctx, skip, limit, userIds)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
