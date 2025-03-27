@@ -58,32 +58,35 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	if err != nil {
 		return nil, err
 	}
+
+	// Create a new message object
 	newMessage := models.Message{
 		SenderID:   user.ID,
 		ReceiverID: uint(input.ReceiverID),
 		Content:    input.Content,
 	}
-	fmt.Println("This is the first message", newMessage)
 
-	msgJson, err := json.Marshal(newMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	receiverIdString := strconv.Itoa(int(input.ReceiverID))
-	channel := "chat:" + receiverIdString
-	fmt.Println("This is the channel", channel)
-	err = r.redis_service.PublishMessage(channel, string(msgJson))
-
-	if err != nil {
-		return nil, err
-	}
-
+	// Save the message first before publishing
 	message, err := r.service.SaveMessage(ctx, &newMessage)
-
 	if err != nil {
 		return nil, err
 	}
+
+	// Convert message to JSON for Redis publishing
+	msgJson, err := json.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+
+	// Publish the saved message to Redis
+	channel := "chat:" + strconv.Itoa(int(input.ReceiverID))
+	err = r.redis_service.PublishMessage(channel, string(msgJson))
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("This is the first messgae", string(msgJson))
+
+	// Create response object
 	messageResponse := &model.MessageResponse{
 		Content:    message.Content,
 		SenderID:   int32(message.SenderID),
@@ -91,6 +94,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 		CreatedAt:  message.CreatedAt.String(),
 		ID:         int32(message.ID),
 	}
+
 	return messageResponse, nil
 }
 
