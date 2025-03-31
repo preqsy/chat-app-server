@@ -85,7 +85,6 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("This is the first messgae", string(msgJson))
 
 	// Create response object
 	messageResponse := &model.MessageResponse{
