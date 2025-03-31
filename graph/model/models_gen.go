@@ -35,6 +35,16 @@ type Filters struct {
 	Limit int32 `json:"limit"`
 }
 
+type FullMessageResponse struct {
+	ID         int32     `json:"id"`
+	SenderID   int32     `json:"sender_id"`
+	ReceiverID int32     `json:"receiver_id"`
+	Content    string    `json:"content"`
+	CreatedAt  string    `json:"createdAt"`
+	Sender     *AuthUser `json:"sender,omitempty"`
+	Receiver   *AuthUser `json:"receiver,omitempty"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
 }

@@ -9,12 +9,13 @@ import (
 
 func (db *PostgresDB) SaveMessage(ctx context.Context, message *models.Message) (*models.Message, error) {
 
-	result := db.client.Create(&message)
+	result := db.client.WithContext(ctx).Create(&message)
 
 	if result.Error != nil {
-		logrus.Error("Failed to save user: ", result.Error)
+		logrus.Error("Failed to save message: ", result.Error)
 		return nil, result.Error
 	}
+	db.client.Preload("Sender").Preload("Receiver").First(&message, message.ID)
 	return message, nil
 }
 

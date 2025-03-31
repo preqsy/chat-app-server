@@ -234,6 +234,10 @@ func (r *queryResolver) ListFriends(ctx context.Context, filters *model.Filters)
 
 // RetrieveMessages is the resolver for the retrieveMessages field.
 func (r *queryResolver) RetrieveMessages(ctx context.Context, senderID int32, receiverID int32) ([]*model.MessageResponse, error) {
+	_, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
 	result, err := r.service.RetrieveMessages(ctx, senderID, receiverID)
 	if err != nil {
 		return nil, err
@@ -247,8 +251,8 @@ func (r *queryResolver) RetrieveMessages(ctx context.Context, senderID int32, re
 }
 
 // NewMessage is the resolver for the newMessage field.
-func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
-	msgChan := make(chan *model.MessageResponse, 1)
+func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.FullMessageResponse, error) {
+	msgChan := make(chan *model.FullMessageResponse, 1)
 	channel := "chat:" + strconv.Itoa(int(receiverID))
 	r.logger.Info("Subscribing to channel: ", channel)
 	pubSub := r.redis_service.SubscribeToChannel(channel)
@@ -256,7 +260,7 @@ func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32)
 		defer pubSub.Close()
 		for msg := range pubSub.Channel() {
 
-			var message model.MessageResponse
+			var message model.FullMessageResponse
 			err := json.Unmarshal([]byte(msg.Payload), &message)
 			fmt.Println("Subscription Message", message)
 			if err == nil {
