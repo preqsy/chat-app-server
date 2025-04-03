@@ -22,3 +22,11 @@ func (s *Service) RetrieveMessages(ctx context.Context, senderId, receiverId int
 	}
 	return messages, nil
 }
+
+func (s *Service) RecentChats(ctx context.Context, senderId int32) ([]*models.Message, error) {
+	recentChats, err := s.datastore.RecentChats(ctx, senderId)
+	if err != nil {
+		return nil, err
+	}
+	return recentChats, nil
+}

@@ -28,3 +28,25 @@ func (db *PostgresDB) RetrieveMessagesById(ctx context.Context, senderId, receiv
 	}
 	return messages, nil
 }
+
+func (db *PostgresDB) RecentChats(ctx context.Context, userId int32) ([]*models.Message, error) {
+	var recentChats []*models.Message
+
+	subQuery := db.client.Table("messages").
+		Select("MAX(id)").
+		Where("sender_id = ? OR receiver_id = ?", userId, userId).
+		Group("LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id)")
+
+	err := db.client.WithContext(ctx).
+		Preload("Sender").
+		Preload("Receiver").
+		Where("id IN (?)", subQuery).
+		Order("id DESC").
+		Find(&recentChats).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return recentChats, nil
+}

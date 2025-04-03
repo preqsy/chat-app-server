@@ -249,6 +249,20 @@ func (r *queryResolver) RetrieveMessages(ctx context.Context, senderID int32, re
 	return messages, nil
 }
 
+// GetRecentChats is the resolver for the getRecentChats field.
+func (r *queryResolver) GetRecentChats(ctx context.Context, senderID *int32) ([]*model.FullMessageResponse, error) {
+	recentChats, err := r.service.RecentChats(ctx, *senderID)
+	if err != nil {
+		return nil, err
+	}
+	var recentChatsReturn []*model.FullMessageResponse
+	err = utils.UnPack(recentChats, &recentChatsReturn)
+	if err != nil {
+		return nil, err
+	}
+	return recentChatsReturn, nil
+}
+
 // NewMessage is the resolver for the newMessage field.
 func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.FullMessageResponse, error) {
 	msgChan := make(chan *model.FullMessageResponse, 1)
