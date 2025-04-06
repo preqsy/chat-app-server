@@ -50,6 +50,15 @@ type MessageResponse {
   content: String!
   createdAt: String!
 }
+type FullMessageResponse {
+  id: Int!
+  sender_id: Int!
+  receiver_id: Int!
+  content: String!
+  createdAt: String!
+  sender: AuthUser
+  receiver: AuthUser
+}
 
 type MessageSub {
   receiver: Int!
@@ -65,6 +74,8 @@ type Query {
   listUsers(filters: Filters): [AuthUser]
   listFriendRequests(filters: Filters): [AuthUser]
   listFriends(filters: Filters): [AuthUser]
+  retrieveMessages(sender_id: Int!, receiver_id: Int!): [MessageResponse]
+  getRecentChats(sender_id: Int): [FullMessageResponse]
 }
 
 type Mutation {
@@ -76,5 +87,5 @@ type Mutation {
 }
 
 type Subscription {
-  newMessage(receiver_id: Int!): MessageResponse
+  newMessage(receiver_id: Int!): FullMessageResponse
 }

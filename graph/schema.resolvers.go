@@ -7,6 +7,7 @@ package graph
 import (
 	"chat_app_server/graph/model"
 	models "chat_app_server/model"
+	"chat_app_server/utils"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -84,14 +85,13 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input model.MessageI
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("This is the first messgae", string(msgJson))
 
 	// Create response object
 	messageResponse := &model.MessageResponse{
 		Content:    message.Content,
 		SenderID:   int32(message.SenderID),
 		ReceiverID: int32(message.ReceiverID),
-		CreatedAt:  message.CreatedAt.String(),
+		CreatedAt:  message.CreatedAt.Format(time.RFC3339),
 		ID:         int32(message.ID),
 	}
 
@@ -231,9 +231,41 @@ func (r *queryResolver) ListFriends(ctx context.Context, filters *model.Filters)
 	return users, nil
 }
 
+// RetrieveMessages is the resolver for the retrieveMessages field.
+func (r *queryResolver) RetrieveMessages(ctx context.Context, senderID int32, receiverID int32) ([]*model.MessageResponse, error) {
+	_, err := r.jwt_utils.GetCurrentAuthUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result, err := r.service.RetrieveMessages(ctx, senderID, receiverID)
+	if err != nil {
+		return nil, err
+	}
+	var messages []*model.MessageResponse
+	err = utils.UnPack(result, &messages)
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
+}
+
+// GetRecentChats is the resolver for the getRecentChats field.
+func (r *queryResolver) GetRecentChats(ctx context.Context, senderID *int32) ([]*model.FullMessageResponse, error) {
+	recentChats, err := r.service.RecentChats(ctx, *senderID)
+	if err != nil {
+		return nil, err
+	}
+	var recentChatsReturn []*model.FullMessageResponse
+	err = utils.UnPack(recentChats, &recentChatsReturn)
+	if err != nil {
+		return nil, err
+	}
+	return recentChatsReturn, nil
+}
+
 // NewMessage is the resolver for the newMessage field.
-func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.MessageResponse, error) {
-	msgChan := make(chan *model.MessageResponse, 1)
+func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32) (<-chan *model.FullMessageResponse, error) {
+	msgChan := make(chan *model.FullMessageResponse, 1)
 	channel := "chat:" + strconv.Itoa(int(receiverID))
 	r.logger.Info("Subscribing to channel: ", channel)
 	pubSub := r.redis_service.SubscribeToChannel(channel)
@@ -241,7 +273,7 @@ func (r *subscriptionResolver) NewMessage(ctx context.Context, receiverID int32)
 		defer pubSub.Close()
 		for msg := range pubSub.Channel() {
 
-			var message model.MessageResponse
+			var message model.FullMessageResponse
 			err := json.Unmarshal([]byte(msg.Payload), &message)
 			fmt.Println("Subscription Message", message)
 			if err == nil {
@@ -271,39 +303,3 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *queryResolver) ListFriendRequest(ctx context.Context, filters *model.Filters) ([]*model.AuthUser, error) {
-	authUser, _ := r.jwt_utils.GetCurrentAuthUser(ctx)
-
-	if filters == nil {
-		filters = &model.Filters{
-			Skip:  0,
-			Limit: 20,
-		}
-	}
-	result, err := r.service.ListFriendRequests(ctx, filters.Skip, filters.Limit, authUser)
-	if err != nil {
-		r.logger.Errorln("error listing friends", err)
-		return nil, err
-	}
-	var users []*model.AuthUser
-
-	for _, user := range result {
-		users = append(users, &model.AuthUser{
-			Email:     user.Email,
-			LastName:  user.LastName,
-			FirstName: user.FirstName,
-			Username:  user.Username,
-			ID:        int32(user.ID),
-		})
-	}
-	return users, nil
-}
-*/
