@@ -38,7 +38,7 @@ func main() {
 	jwtService := jwt_utils.InitializeJWTUtils(datastore, logger)
 	ctx := context.Background()
 
-	redisService, err := external.InitRedis(ctx, logger)
+	redisService, err := external.InitRedis(ctx, logger, secrets.RedisURL)
 	if err != nil {
 		logrus.Error("Redis connection failed:", err)
 	}

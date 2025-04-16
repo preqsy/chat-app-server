@@ -21,6 +21,7 @@ type Secrets struct {
 	Neo4jUri      string `json:"NEO4J_URI" envconfig:"NEO4J_URI"`
 	Neo4jUser     string `json:"NEO4J_USER" envconfig:"NEO4J_USER"`
 	Neo4jPassword string `json:"NEO4J_PASSWORD" envconfig:"NEO4J_PASSWORD"`
+	RedisURL      string `json:"REDIS_URL" envconfig:"REDIS_URL"`
 }
 
 var ss Secrets
@@ -42,6 +43,7 @@ func init() {
 	ss.Neo4jUri = os.Getenv("NEO4J_URI")
 	ss.Neo4jUser = os.Getenv("NEO4J_USER")
 	ss.Neo4jPassword = os.Getenv("NEO4J_PASSWORD")
+	ss.RedisURL = os.Getenv("REDIS_URL")
 }
 
 func GetSecrets() Secrets {

@@ -13,10 +13,10 @@ type RedisService struct {
 	logger *logrus.Logger
 }
 
-func InitRedis(ctx context.Context, logger *logrus.Logger) (*RedisService, error) {
+func InitRedis(ctx context.Context, logger *logrus.Logger, redisUrl string) (*RedisService, error) {
 
 	logger.Info("Connecting to redis.....")
-	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	rdb := redis.NewClient(&redis.Options{Addr: redisUrl})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		return nil, err

@@ -15,7 +15,7 @@ type PostgresDB struct {
 
 func ConnectDB(host, user, password, dbname, port string) (*PostgresDB, error) {
 	logrus.Info("Connecting to database.........")
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", host, user, password, dbname, port)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC", host, user, password, dbname, port)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		logrus.Error("Failed to connect to database", err.Error())
