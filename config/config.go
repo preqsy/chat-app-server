@@ -13,11 +13,12 @@ import (
 var ServiceName = "chat_app_server"
 
 type Secrets struct {
+	DefaultPort   string `json:"PORT": envconfig:"PORT"`
 	Db_User       string `json:"USER" envconfig:"DB_USER"`
 	DbName        string `json:"DBNAME" envconfig:"DBNAME"`
 	Password      string `json:"PASSWORD" envconfig:"PASSWORD"`
 	Host          string `json:"HOST" envconfig:"HOST"`
-	Port          string `json:"PORT" envconfig:"PORT"`
+	DbPort        string `json:"DB_PORT" envconfig:"DB_PORT"`
 	JwtSecret     string `json:"JWT_SECRET" envconfig:"JWT_SECRET"`
 	Neo4jUri      string `json:"NEO4J_URI" envconfig:"NEO4J_URI"`
 	Neo4jUser     string `json:"NEO4J_USER" envconfig:"NEO4J_USER"`
@@ -35,11 +36,12 @@ func init() {
 		_ = godotenv.Load(env)
 	}
 	ss = Secrets{}
+	ss.DefaultPort = os.Getenv("PORT")
 	ss.DbName = os.Getenv("DBNAME")
 	ss.Db_User = os.Getenv("DB_USER")
 	ss.Password = os.Getenv("PASSWORD")
 	ss.Host = os.Getenv("HOST")
-	ss.Port = os.Getenv("PORT")
+	ss.DbPort = os.Getenv("DB_PORT")
 	ss.JwtSecret = os.Getenv("JWT_SECRET")
 	ss.Neo4jUri = strings.TrimSpace(os.Getenv("NEO4J_URI"))
 	ss.Neo4jUser = os.Getenv("NEO4J_USER")

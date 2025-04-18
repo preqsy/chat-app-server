@@ -22,7 +22,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-const defaultPort = "8080"
+// const defaultPort = "8080"
 
 func main() {
 	secrets := config.GetSecrets()
@@ -30,7 +30,7 @@ func main() {
 	// logger.SetFormatter(&logrus.JSONFormatter{})
 	logger.SetLevel(logrus.DebugLevel)
 
-	datastore, err := database.ConnectDB(secrets.Host, secrets.Db_User, secrets.Password, secrets.DbName, secrets.Port)
+	datastore, err := database.ConnectDB(secrets.Host, secrets.Db_User, secrets.Password, secrets.DbName, secrets.DbPort)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -91,6 +91,6 @@ func main() {
 	http.Handle("/", corsHandler(playground.Handler("GraphQL playground", "/query")))
 	http.Handle("/query", corsHandler(queryHandler))
 
-	logger.Printf("connect to http://localhost:%s/ for GraphQL playground", defaultPort)
-	logger.Fatal(http.ListenAndServe(":"+defaultPort, nil))
+	logger.Printf("connect to http://0.0.0.0:%s/ for GraphQL playground", secrets.DefaultPort)
+	logger.Fatal(http.ListenAndServe("0.0.0.0:"+secrets.DefaultPort, nil))
 }
