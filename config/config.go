@@ -5,6 +5,7 @@ import (
 	"go/build"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -43,7 +44,7 @@ func init() {
 	ss.Neo4jUri = os.Getenv("NEO4J_URI")
 	ss.Neo4jUser = os.Getenv("NEO4J_USER")
 	ss.Neo4jPassword = os.Getenv("NEO4J_PASSWORD")
-	ss.RedisURL = os.Getenv("REDIS_URL")
+	ss.RedisURL = strings.TrimSpace(os.Getenv("REDIS_URL"))
 }
 
 func GetSecrets() Secrets {
