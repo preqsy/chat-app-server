@@ -13,7 +13,7 @@ import (
 var ServiceName = "chat_app_server"
 
 type Secrets struct {
-	DefaultPort   string `json:"PORT": envconfig:"PORT"`
+	DefaultPort   string `json:"PORT" envconfig:"PORT"`
 	Db_User       string `json:"USER" envconfig:"DB_USER"`
 	DbName        string `json:"DBNAME" envconfig:"DBNAME"`
 	Password      string `json:"PASSWORD" envconfig:"PASSWORD"`
