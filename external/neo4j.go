@@ -24,7 +24,7 @@ func InitNEO4J(ctx context.Context, logger *logrus.Logger, secrets config.Secret
 
 	dbUri := secrets.Neo4jUri
 	dbUser := secrets.Neo4jUser
-	dbPassword := secrets.Password
+	dbPassword := secrets.Neo4jPassword
 
 	driver, err := neo4j.NewDriverWithContext(
 		dbUri, neo4j.BasicAuth(dbUser, dbPassword, ""),
@@ -39,7 +39,7 @@ func InitNEO4J(ctx context.Context, logger *logrus.Logger, secrets config.Secret
 		logger.Errorf("Neo4j connection failed: %v", err)
 		return nil, err
 	}
-	logger.Info("Database connection established")
+	logger.Info("Neo4j Database connection established")
 
 	return &NEO4JService{driver: driver, logger: logger, ctx: ctx}, nil
 }
