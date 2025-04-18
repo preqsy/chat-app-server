@@ -41,7 +41,7 @@ func init() {
 	ss.Host = os.Getenv("HOST")
 	ss.Port = os.Getenv("PORT")
 	ss.JwtSecret = os.Getenv("JWT_SECRET")
-	ss.Neo4jUri = os.Getenv("NEO4J_URI")
+	ss.Neo4jUri = strings.TrimSpace(os.Getenv("NEO4J_URI"))
 	ss.Neo4jUser = os.Getenv("NEO4J_USER")
 	ss.Neo4jPassword = os.Getenv("NEO4J_PASSWORD")
 	ss.RedisURL = strings.TrimSpace(os.Getenv("REDIS_URL"))
